@@ -1,0 +1,60 @@
+:root {
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap');
+
+	--black: #000000;
+	--blue: #264653;
+	--teal:	#2A9D8F;
+	--yellow: #E9C46A;
+	--orange: #F4A261;
+    --red: #E76F51;
+
+    --size: 5rem;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+}
+
+#app-container {
+    background: var(--blue);
+    display: grid;
+    place-items: center;
+    height: 100vh;
+}
+
+#border {
+    grid-area: 1 / 1 / 1 / 1;
+    height: calc(9 * var(--size));
+    aspect-ratio: 1;
+    background: var(--red);
+    border-radius: 0.25rem;
+}
+
+#chessboard {
+    display: grid;
+    grid-area: 1 / 1 / 1 / 1;
+    grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
+    position: relative;
+}
+
+div {
+    font-size: calc(.9 * var(--size));
+    font-family: 'Noto Sans Symbols 2', sans-serif;
+    color: var(--blue);
+}
+
+.tile {
+    all: unset;
+    display: grid;
+    place-items: center;
+}
+
+
+.⬜ {
+    background: var(--orange);
+}
+
+.⬛ {
+    background: white;
+}
