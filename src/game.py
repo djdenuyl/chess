@@ -4,28 +4,38 @@ Created on 2022-10-19
 """
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import Optional
+from string import ascii_uppercase
 from src.player import WHITE_PLAYER, BLACK_PLAYER, PieceOption
 
-LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+LETTERS = list(ascii_uppercase)[:8]
 
 
 @dataclass
 class Tile:
     x: str = field(repr=False)
     y: int = field(repr=False)
+    x_int: int = field(init=False, repr=False)
     name: str = field(init=False)
-    piece: Optional[PieceOption] = None
+    piece: str = ''
     color: str = field(init=False)
 
-    def __post_init__(self):
+    def __set_x_int(self):
+        self.x_int = LETTERS.index(self.x)
+
+    def __set_name(self):
+        self.name = f'{self.x}{self.y}'
+
+    def __set_color(self):
         # if the sum of the x and the y index is even, the tile is a black tile
-        if (LETTERS.index(self.x) + self.y) % 2 == 0:
+        if (self.x_int + self.y) % 2 == 0:
             self.color = '⬛'
         else:
             self.color = '⬜'
 
-        self.name = f'{self.x}{self.y}'
+    def __post_init__(self):
+        self.__set_x_int()
+        self.__set_name()
+        self.__set_color()
 
 
 @dataclass
@@ -45,9 +55,16 @@ class Board:
         ]
 
     def tile_by_index(self, idx) -> Tile:
+        """ return a tile by its index """
         return list(chain(*self.tiles))[idx]
 
-    def name_to_index(self, name) -> int:
+    def tile_by_name(self, name) -> Tile:
+        """ return a tile by its name """
+        tile, *_ = [t for t in list(chain(*self.tiles)) if t.name == name]
+        return tile
+
+    def index_by_name(self, name) -> int:
+        """ return a tile index by its name"""
         return [i for i, tile in enumerate(chain(*self.tiles)) if tile.name == name][0]
 
 
@@ -65,10 +82,19 @@ class Game:
                 for x, y in v:
                     self.board.tiles[int(y) - 1][LETTERS.index(x)].piece = k.value.get(player.color)
 
+    def is_valid_move(self, frm: Tile, to: Tile) -> bool:
+        return True
+
+    def move(self, frm: Tile, to: Tile):
+        """ move a piece """
+        if self.is_valid_move(frm, to):
+            self.board.tiles[self.board.height - to.y][to.x_int].piece = frm.piece
+            self.board.tiles[self.board.height - frm.y][frm.x_int].piece = ''
+
     def print(self):
         print('  ' + '  '.join(LETTERS, ))
         for y in self.board.tiles:
-            print(f"{y[0].y} {'  '.join([x.color for x in y])} {y[0].y}")
+            print(f"{y[0].y} {'  '.join([x.piece or x.color for x in y])} {y[0].y}")
 
         print('  ' + '  '.join(LETTERS, ))
 
@@ -81,12 +107,22 @@ def main():
     while playing:
         action = input('Enter tile to move piece from and to: (comma separated): ')
 
+        if action == 'q':
+            playing = False
+            continue
+
         try:
-            frm, to = action.split(',')
+            frm, to = [a.strip().upper() for a in action.split(',')]
             print(frm, to)
+            game.move(
+                game.board.tile_by_name(frm),
+                game.board.tile_by_name(to)
+            )
         except ValueError:
             print(f'could not parse action: {action}')
             continue
+
+        game.print()
 
 
 if __name__ == '__main__':

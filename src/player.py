@@ -19,6 +19,7 @@ class PieceOption(Enum):
     BISHOP = {Color.BLACK: '♗', Color.WHITE: '♝'}
     KING = {Color.BLACK: '♔', Color.WHITE: '♚'}
     QUEEN = {Color.BLACK: '♕', Color.WHITE: '♛'}
+    NONE = {Color.BLACK: '', Color.WHITE: ''}
 
 
 @dataclass
