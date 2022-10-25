@@ -35,17 +35,16 @@ body, html {
     display: grid;
     grid-area: 1 / 1 / 1 / 1;
     grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
-    position: relative;
 }
 
-div {
-    font-size: calc(.9 * var(--size));
+button {
+    font-size: calc(.6 * var(--size));
     font-family: 'Noto Sans Symbols 2', sans-serif;
     color: var(--blue);
 }
 
 .tile {
-    all: unset;
+    border: none;
     display: grid;
     place-items: center;
 }
@@ -57,4 +56,12 @@ div {
 
 .⬛ {
     background: white;
+}
+
+.selected {
+    animation: throb 1s infinite;
+}
+
+@keyframes throb {
+    50% {font-size: calc(var(--size) * 0.75);}
 }

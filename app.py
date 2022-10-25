@@ -5,7 +5,8 @@ Created on 2022-10-22
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
-from lib.game import Game
+from src.game import Game
+from typing import Optional
 
 
 class App:
@@ -13,6 +14,7 @@ class App:
         self.dash = Dash()
         self.game = Game()
         self.dash.layout = self.layout
+        self.tiles = None
         self.callbacks()
 
     @property
@@ -33,7 +35,7 @@ class App:
 
     def init_board(self) -> list[Button]:
         buttons = []
-        for row in self.game.board:
+        for row in self.game.board.tiles:
             for tile in row:
                 buttons.append(
                     Button(
@@ -48,12 +50,19 @@ class App:
 
         return buttons
 
-    def update_tiles(self, tiles: list):
-        for i, _ in enumerate(tiles):
-            # TODO: you are here
-            tiles[i]['props']['children'] = self.game.board.get_tile(i).piece
+    def update_classes(self, index: str, *, add: list[str]):
+        for a in add:
+            current_classes = self.tiles[self.game.board.name_to_index(index)]['props']['className']
+            self.tiles[self.game.board.name_to_index(index)]['props']['className'] = current_classes + ' ' + a
 
-        return tiles
+    def update_tiles(self, triggered_id: Optional[str] = None) -> list[dict]:
+        for i, _ in enumerate(self.tiles):
+            self.tiles[i]['props']['children'] = self.game.board.tile_by_index(i).piece
+
+        if triggered_id is not None:
+            self.update_classes(triggered_id, add=['selected'])
+
+        return self.tiles
 
     def callbacks(self):
         @self.dash.callback(
@@ -62,11 +71,16 @@ class App:
             State('chessboard', 'children'),
             prevent_initial_callback=True
         )
-        def render(tiles):
+        def render(_, tiles):
             if ctx.triggered_id is None:
                 raise PreventUpdate
 
-            return self.update_tiles(tiles)
+            triggered_id = ctx.triggered_id.get('index')
+
+            # set the new tile state
+            self.tiles = tiles
+
+            return self.update_tiles(triggered_id)
 
 
 if __name__ == '__main__':

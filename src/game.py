@@ -5,7 +5,7 @@ Created on 2022-10-19
 from dataclasses import dataclass, field
 from itertools import chain
 from typing import Optional
-from lib.player import WHITE_PLAYER, BLACK_PLAYER, PieceOption
+from src.player import WHITE_PLAYER, BLACK_PLAYER, PieceOption
 
 LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
@@ -40,12 +40,15 @@ class Board:
     def __init_board(self):
         return [
             [
-                Tile(LETTERS[w], 8 - h) for w in range(self.width)
+                Tile(LETTERS[w], self.height - h) for w in range(self.width)
             ] for h in range(self.height)
         ]
 
-    def get_tile(self, idx):
+    def tile_by_index(self, idx) -> Tile:
         return list(chain(*self.tiles))[idx]
+
+    def name_to_index(self, name) -> int:
+        return [i for i, tile in enumerate(chain(*self.tiles)) if tile.name == name][0]
 
 
 class Game:
