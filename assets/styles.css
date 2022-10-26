@@ -1,5 +1,6 @@
 :root {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap');
 
     --white: white;
 	--black: #000000;
@@ -65,4 +66,16 @@ button {
 
 @keyframes throb {
     50% {font-size: calc(var(--size) * 0.75);}
+}
+
+#labels {
+    display: grid;
+    grid-area: 1 / 1 / 1 / 1;
+    grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
+}
+
+.label {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.75rem;
+    margin: 2px;
 }

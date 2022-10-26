@@ -28,7 +28,8 @@ class App:
                 Div(
                     id='chessboard',
                     children=self.init_board()
-                )
+                ),
+                Div(id='labels', children=self.init_labels())
             ]
         )
 
@@ -56,6 +57,19 @@ class App:
                 )
 
         return buttons
+
+    def init_labels(self) -> list[Div]:
+        labels = []
+        for row in self.game.board.tiles:
+            for tile in row:
+                labels.append(
+                    Div(
+                        tile.name,
+                        className='label'
+                    )
+                )
+
+        return labels
 
     def reset_effects(self):
         """ reset the class for each tile to its original state"""

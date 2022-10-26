@@ -4,11 +4,13 @@ Created on 2022-10-19
 """
 from abc import ABC, abstractmethod
 from utils.color import Color
-from utils.direction import Direction
-from utils.length import Length
+from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
+from utils.start_positions import BLACK_PAWN_START_POSITIONS, WHITE_PAWN_START_POSITIONS
+from utils.vector import get_vector
 
 
 class Piece(ABC):
+    """ a piece on the board """
     def __init__(self, color: Color):
         self.color = color
 
@@ -27,14 +29,6 @@ class Piece(ABC):
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
         """ this method implements whether movement of Tile frm to Tile to is allowed for the piece"""
 
-    @staticmethod
-    def get_vector(frm: 'Tile', to: 'Tile') -> tuple[Direction, Length]:
-        """ get the vector containing the direction and length of the movement of the piece"""
-        x = -1 if (dx := to.x_int - frm.x_int) < 0 else 1 if dx > 0 else 0
-        y = -1 if (dy := to.y - frm.y) < 0 else 1 if dy > 0 else 0
-
-        return Direction((x, y)), Length(dx, dy)
-
 
 class Pawn(Piece):
     @property
@@ -42,13 +36,32 @@ class Pawn(Piece):
         return {Color.BLACK: '♟', Color.WHITE: '♙'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
-        direction, length = self.get_vector(frm, to)
+        direction, length = get_vector(frm, to)
 
+        # regular move
         if length.size == 1:
-            if self.color == Color.BLACK and direction == Direction.S:
+            if self.color == Color.BLACK and direction == Direction.S \
+                    or self.color == Color.WHITE and direction == Direction.N:
                 return True
-            elif self.color == Color.WHITE and direction == Direction.N:
+
+        # start move
+        if length.size == 2:
+            # TODO: frm.name in PAWN_START_POSITIONS should really be a check on tiles instead of strings
+            # TODO: but importing anything from the tiles module here results in a circular import
+            if (self.color == Color.BLACK
+                and direction == Direction.S
+                and frm.name in BLACK_PAWN_START_POSITIONS) \
+                    or (self.color == Color.WHITE
+                        and direction == Direction.N
+                        and frm.name) in WHITE_PAWN_START_POSITIONS:
                 return True
+
+        # taking another piece
+        if abs(length.dx) == 1 and abs(length.dy) == 1:
+            if self.color == Color.BLACK and direction in (Direction.SE, Direction.SW) \
+                    or self.color == Color.WHITE and direction in (Direction.NE, Direction.NW):
+                if not isinstance(to.piece, Blank):
+                    return True
 
         return False
 
@@ -59,7 +72,13 @@ class Rook(Piece):
         return {Color.BLACK: '♜', Color.WHITE: '♖'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
-        return True
+        direction, _ = get_vector(frm, to)
+
+        if direction in STRAIGHT_DIRECTIONS \
+                and to.piece.color != self.color:
+            return True
+
+        return False
 
 
 class Knight(Piece):
@@ -68,7 +87,13 @@ class Knight(Piece):
         return {Color.BLACK: '♞', Color.WHITE: '♘'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
-        return True
+        direction, length = get_vector(frm, to)
+
+        if direction in DIAGONAL_DIRECTIONS\
+                and abs(length.dx) + abs(length.dy) == 3:
+            return True
+
+        return False
 
 
 class Bishop(Piece):
@@ -77,7 +102,13 @@ class Bishop(Piece):
         return {Color.BLACK: '♝', Color.WHITE: '♗'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
-        return True
+        direction, length = get_vector(frm, to)
+
+        if direction in DIAGONAL_DIRECTIONS \
+                and abs(length.dx) == abs(length.dy):
+            return True
+
+        return False
 
 
 class Queen(Piece):
@@ -86,7 +117,13 @@ class Queen(Piece):
         return {Color.BLACK:  '♛', Color.WHITE: '♕'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
-        return True
+        direction, length = get_vector(frm, to)
+
+        if (direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy)) \
+                or direction in STRAIGHT_DIRECTIONS:
+            return True
+
+        return False
 
 
 class King(Piece):
@@ -95,10 +132,18 @@ class King(Piece):
         return {Color.BLACK:  '♚', Color.WHITE: '♔'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
-        return True
+        direction, length = get_vector(frm, to)
+
+        if ((direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy))
+                or direction in STRAIGHT_DIRECTIONS) \
+                and abs(length.dx) <= 1 and abs(length.dy) <= 1:
+            return True
+
+        return False
 
 
 class Blank(Piece):
+    """ A placeholder class for tiles unoccupied by pieces"""
     def __init__(self):
         self.color = Color.NONE
         super().__init__(self.color)
@@ -108,6 +153,7 @@ class Blank(Piece):
         return {Color.NONE:  ''}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+        """ never move a blank field"""
         return False
 
 
