@@ -51,7 +51,7 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=tile.piece
+                        children=str(tile.piece)
                     )
                 )
 
@@ -73,7 +73,7 @@ class App:
     def update_placement(self):
         """ update the children of all tiles with the current game state"""
         for i, _ in enumerate(self.tiles):
-            self.tiles[i]['props']['children'] = self.game.board.tile_by_index(i).piece
+            self.tiles[i]['props']['children'] = str(self.game.board.tile_by_index(i).piece)
 
     def update_tiles(self) -> list[dict]:
         """ update the tiles, update the placements and effects"""
