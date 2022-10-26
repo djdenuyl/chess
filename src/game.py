@@ -20,7 +20,7 @@ class Game:
         for player in self.players:
             for k, v in player.start_positions.items():
                 for t in v:
-                    self.board.tiles[self.board.height - t.y][t.x_int].piece = k.value.get(player.color)
+                    self.board.tiles[self.board.height - t.y][t.x_int].piece = k(player.color)
 
     @staticmethod
     def is_valid_move(frm: Tile, to: Tile) -> bool:
