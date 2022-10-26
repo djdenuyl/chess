@@ -128,7 +128,6 @@ class App:
             self.tiles = tiles
 
             if self.selected_index is not None:
-                print(self.selected_index)
                 self.game.move(
                     self.game.board.tile_by_name(self.selected_index),
                     self.game.board.tile_by_name(triggered_id)

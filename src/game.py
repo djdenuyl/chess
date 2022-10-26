@@ -34,8 +34,6 @@ class Game:
         # only knights ignore the clear path rule, other pieces obey
         if not isinstance(frm.piece, Knight):
             direction, length = get_vector(frm, to)
-            print(f'{direction=}')
-            print(f'{length=}')
             if direction in (Direction.E, Direction.W):
                 tiles = [
                     self.board.tiles[self.board.height - frm.y][x]
@@ -47,7 +45,6 @@ class Game:
                     for y in range(frm.y + direction.value[1], to.y, direction.value[1])
                 ]
             elif direction in DIAGONAL_DIRECTIONS:
-                print('moving diagonally')
                 tiles = [
                     self.board.tiles[self.board.height - y][x]
                     for x, y in zip(
@@ -55,7 +52,6 @@ class Game:
                         range(frm.y + direction.value[1], to.y, direction.value[1])
                     )
                 ]
-                print(tiles)
             else:
                 tiles = []
 
