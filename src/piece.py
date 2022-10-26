@@ -57,7 +57,7 @@ class Pawn(Piece):
                 return True
 
         # taking another piece
-        if abs(length.dx) == 1 and abs(length.dy) == 1:
+        if abs(length.dx) == 1 and abs(length.dy) == 1 and to.piece.color != self.color:
             if self.color == Color.BLACK and direction in (Direction.SE, Direction.SW) \
                     or self.color == Color.WHITE and direction in (Direction.NE, Direction.NW):
                 if not isinstance(to.piece, Blank):
@@ -90,7 +90,8 @@ class Knight(Piece):
         direction, length = get_vector(frm, to)
 
         if direction in DIAGONAL_DIRECTIONS\
-                and abs(length.dx) + abs(length.dy) == 3:
+                and abs(length.dx) + abs(length.dy) == 3 \
+                and to.piece.color != self.color:
             return True
 
         return False
@@ -105,7 +106,8 @@ class Bishop(Piece):
         direction, length = get_vector(frm, to)
 
         if direction in DIAGONAL_DIRECTIONS \
-                and abs(length.dx) == abs(length.dy):
+                and abs(length.dx) == abs(length.dy) \
+                and to.piece.color != self.color:
             return True
 
         return False
@@ -119,8 +121,9 @@ class Queen(Piece):
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
         direction, length = get_vector(frm, to)
 
-        if (direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy)) \
-                or direction in STRAIGHT_DIRECTIONS:
+        if ((direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy))
+            or direction in STRAIGHT_DIRECTIONS) \
+                and to.piece.color != self.color:
             return True
 
         return False
@@ -135,8 +138,9 @@ class King(Piece):
         direction, length = get_vector(frm, to)
 
         if ((direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy))
-                or direction in STRAIGHT_DIRECTIONS) \
-                and abs(length.dx) <= 1 and abs(length.dy) <= 1:
+            or direction in STRAIGHT_DIRECTIONS) \
+                and abs(length.dx) <= 1 and abs(length.dy) <= 1 \
+                and to.piece.color != self.color:
             return True
 
         return False

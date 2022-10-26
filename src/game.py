@@ -6,7 +6,7 @@ from src.piece import Blank, Knight
 from src.player import WHITE_PLAYER, BLACK_PLAYER
 from src.tile import Tile
 from src.board import Board
-from utils.direction import Direction
+from utils.direction import Direction, DIAGONAL_DIRECTIONS
 from utils.letters import LETTERS
 from utils.vector import get_vector
 
@@ -29,41 +29,40 @@ class Game:
         """ check if the piece on the 'frm' Tile is allowed to move to the 'to' Tile"""
         return frm.piece.is_valid_move(frm, to) and self.has_clear_path(frm, to)
 
-    @staticmethod
-    def has_clear_path(frm: Tile, to: Tile) -> bool:
+    def has_clear_path(self, frm: Tile, to: Tile) -> bool:
         """ check if there are any pieces between the 'frm' tile and 'to' tile. return False if there are any"""
         # only knights ignore the clear path rule, other pieces obey
         if not isinstance(frm.piece, Knight):
-            # frm, to = Tile('A', 1), Tile('H', 8)
-            # frm, to = Tile('H', 8), Tile('A', 1)
-            frm, to = Tile('A', 4), Tile('B', 6)
             direction, length = get_vector(frm, to)
+            print(f'{direction=}')
+            print(f'{length=}')
             if direction in (Direction.E, Direction.W):
                 tiles = [
-                    Tile(x=LETTERS[x], y=frm.y)
-                    for x in range(frm.x_int + direction.value[0], frm.x_int + length.dx, direction.value[0])
+                    self.board.tiles[self.board.height - frm.y][x]
+                    for x in range(frm.x_int + direction.value[0], to.x_int, direction.value[0])
                 ]
             elif direction in (Direction.N, Direction.S):
                 tiles = [
-                    Tile(x=frm.x, y=y)
-                    for y in range(frm.y + direction.value[1], frm.y + length.dy, direction.value[1])
+                    self.board.tiles[self.board.height - y][frm.x_int]
+                    for y in range(frm.y + direction.value[1], to.y, direction.value[1])
                 ]
-            elif direction in (Direction.NE, Direction.SW):
+            elif direction in DIAGONAL_DIRECTIONS:
+                print('moving diagonally')
                 tiles = [
-                    Tile(x=LETTERS[x], y=y)
+                    self.board.tiles[self.board.height - y][x]
                     for x, y in zip(
-                        range(frm.x_int + direction.value[0], frm.x_int + length.dx, direction.value[0]),
-                        range(frm.y + direction.value[1], frm.y + length.dy, direction.value[1])
+                        range(frm.x_int + direction.value[0], to.x_int, direction.value[0]),
+                        range(frm.y + direction.value[1], to.y, direction.value[1])
                     )
                 ]
+                print(tiles)
             else:
                 tiles = []
 
-            print([t.name for t in tiles])
-
-            # if not all of the tiles between frm and to are empty, the path is not clear
-            if not all([isinstance(t.piece, Blank) for t in tiles]):
-                return False
+            # if any of the tiles between frm and to is not a Blank tile, the path is not clear
+            for t in tiles:
+                if not isinstance(t.piece, Blank):
+                    return False
 
         return True
 

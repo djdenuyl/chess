@@ -29,7 +29,7 @@ class App:
                     id='chessboard',
                     children=self.init_board()
                 ),
-                Div(id='labels', children=self.init_labels())
+                # Div(id='labels', children=self.init_labels())
             ]
         )
 
