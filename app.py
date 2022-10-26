@@ -39,6 +39,7 @@ class App:
     def init_board(self) -> list[Button]:
         """ initiate the game board. update the original classes of each tile"""
         buttons = []
+        self.original_classes = []
         for row in self.game.board.tiles:
             for tile in row:
                 class_name = f'tile {tile.color}'
@@ -118,9 +119,12 @@ class App:
                     self.game.board.tile_by_name(self.selected_index),
                     self.game.board.tile_by_name(triggered_id)
                 )
-
-            # update which piece is selected
-            self.update_selection(triggered_id)
+                # deselect after move
+                # TODO: what if move was not valid, still deselect?
+                self.selected_index = None
+            else:
+                # update which piece is selected
+                self.update_selection(triggered_id)
 
             return self.update_tiles()
 

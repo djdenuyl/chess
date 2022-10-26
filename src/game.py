@@ -45,10 +45,11 @@ class Board:
     tiles: list[list[Tile]] = field(init=False)
 
     def __post_init__(self):
-        self.tiles = self.__init_board()
+        self.__init_board()
 
     def __init_board(self):
-        return [
+        """ initialize an empty game board """
+        self.tiles = [
             [
                 Tile(LETTERS[w], self.height - h) for w in range(self.width)
             ] for h in range(self.height)
@@ -88,8 +89,11 @@ class Game:
     def move(self, frm: Tile, to: Tile):
         """ move a piece """
         if self.is_valid_move(frm, to):
-            self.board.tiles[self.board.height - to.y][to.x_int].piece = frm.piece
-            self.board.tiles[self.board.height - frm.y][frm.x_int].piece = ''
+            from_piece = frm.piece
+            to_piece = to.piece
+
+            self.board.tiles[self.board.height - to.y][to.x_int].piece = from_piece
+            self.board.tiles[self.board.height - frm.y][frm.x_int].piece = to_piece
 
     def print(self):
         print('  ' + '  '.join(LETTERS, ))
