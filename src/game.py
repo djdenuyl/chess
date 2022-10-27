@@ -52,14 +52,14 @@ class Game:
     @staticmethod
     def _horizontal_indices_between(frm: Tile, to: Tile) -> range:
         """ collect the axis indices horizontally between the frm and to tile"""
-        drctn, lng = get_vector(frm, to)
-        return range(frm.x_int + drctn.value[0], to.x_int, drctn.value[0] or 1) or [frm.x_int] * (abs(lng.dy) - 1)
+        drc, lng = get_vector(frm, to)
+        return range(frm.x_int + drc.value[0], to.x_int, drc.value[0] or 1) or [frm.x_int] * (abs(lng.dy) - 1)
 
     @staticmethod
     def _vertical_indices_between(frm: Tile, to: Tile) -> range:
         """ collect the axis indices vertically between the frm and to tile"""
-        drctn, lng = get_vector(frm, to)
-        return range(frm.y + drctn.value[1], to.y, drctn.value[1] or 1) or [frm.y] * (abs(lng.dx) - 1)
+        drc, lng = get_vector(frm, to)
+        return range(frm.y + drc.value[1], to.y, drc.value[1] or 1) or [frm.y] * (abs(lng.dx) - 1)
 
     def move(self, frm: Tile, to: Tile):
         """ move a piece"""

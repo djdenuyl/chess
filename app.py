@@ -26,7 +26,10 @@ class App:
         return Div(
             id='app-container',
             children=[
-                Div(id='border', children=self.init_labels()),
+                Div(
+                    id='border',
+                    children=self.init_labels()
+                ),
                 Div(
                     id='chessboard',
                     children=self.init_board()
@@ -59,23 +62,13 @@ class App:
 
         return buttons
 
-    def init_labels(self) -> list[Div]:
-        empty_div = Div('', className='label')
-
-        labels = list()
-        labels.append(empty_div)
-        labels.extend([Div(i, className='letter') for i in LETTERS])
-        labels.append(empty_div)
-        for i, row in enumerate(self.game.board.tiles):
-            labels.append(Div(i + 1, className='number'))
-            for _ in row:
-                labels.append(empty_div)
-            labels.append(Div(i + 1, className='number'))
-        # letters =
-        # numbers = [Div(i, className='number') for i in range(1, 9)]
-
-        # return letters + numbers
-        return labels
+    @staticmethod
+    def init_labels() -> list[Div]:
+        top_letters = Div(className='label top letters', children=[Div(i) for i in LETTERS])
+        lft_numbers = Div(className='label lft numbers', children=[Div(i) for i in range(8, 0, -1)])
+        rgt_numbers = Div(className='label rgt numbers ', children=[Div(i) for i in range(8, 0, -1)])
+        btm_letters = Div(className='label btm letters ', children=[Div(i) for i in LETTERS])
+        return [top_letters, lft_numbers, rgt_numbers, btm_letters]
 
     def reset_effects(self):
         """ reset the class for each tile to its original state"""

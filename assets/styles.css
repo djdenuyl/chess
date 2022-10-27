@@ -1,6 +1,6 @@
 :root {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap');
-    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
 
     --white: white;
 	--black: #000000;
@@ -32,13 +32,36 @@ body, html {
     background: var(--red);
     border-radius: calc(0.05 * var(--size));
     display: grid;
-    grid-template: repeat(18, 1fr) / repeat(18, 1fr);
+    grid-template-columns: 1fr 16fr 1fr;
+    grid-template-rows: 1fr 16fr 1fr;
+    grid-template-areas:
+        ". t ."
+        "l . r"
+        ". b .";
 }
 
 .label {
     font-size: calc(.3 * var(--size));
     font-family: 'Noto Sans Symbols 2', sans-serif;
     color: var(--blue);
+}
+
+.top {grid-area: t;}
+.rgt {grid-area: r;}
+.btm {grid-area: b;}
+.lft {grid-area: l;}
+
+.letters {
+    display: grid;
+    grid-template: 1fr / repeat(8, 1fr);
+}
+
+.numbers {
+    display: grid;
+    grid-template: repeat(8, 1fr) / 1fr;
+}
+
+.label > * {
     display: grid;
     place-items: center;
 }
