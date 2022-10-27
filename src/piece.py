@@ -40,8 +40,9 @@ class Pawn(Piece):
 
         # regular move
         if length.size == 1:
-            if self.color == Color.BLACK and direction == Direction.S \
-                    or self.color == Color.WHITE and direction == Direction.N:
+            if (self.color == Color.BLACK and direction == Direction.S
+                or self.color == Color.WHITE and direction == Direction.N) \
+                    and isinstance(to.piece, Blank):
                 return True
 
         # start move
@@ -53,7 +54,9 @@ class Pawn(Piece):
                 and frm.name in BLACK_PAWN_START_POSITIONS) \
                     or (self.color == Color.WHITE
                         and direction == Direction.N
-                        and frm.name) in WHITE_PAWN_START_POSITIONS:
+                        and frm.name in WHITE_PAWN_START_POSITIONS) \
+                    and isinstance(to.piece, Blank):
+
                 return True
 
         # taking another piece
