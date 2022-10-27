@@ -6,7 +6,7 @@ from src.piece import Blank, Knight
 from src.player import WHITE_PLAYER, BLACK_PLAYER
 from src.tile import Tile
 from src.board import Board
-from utils.direction import Direction, DIAGONAL_DIRECTIONS
+from utils.color import Color
 from utils.letters import LETTERS
 from utils.vector import get_vector
 
@@ -17,6 +17,7 @@ class Game:
         self.white = WHITE_PLAYER
         self.black = BLACK_PLAYER
         self.players = [self.white, self.black]
+        self.turn = Color.WHITE
         self.__init_pieces()
 
     def __init_pieces(self):
@@ -25,35 +26,18 @@ class Game:
                 for t in v:
                     self.board.tiles[self.board.height - t.y][t.x_int].piece = k(player.color)
 
-    def is_valid_move(self, frm: Tile, to: Tile) -> bool:
+    def __is_valid_move(self, frm: Tile, to: Tile) -> bool:
         """ check if the piece on the 'frm' Tile is allowed to move to the 'to' Tile"""
-        return frm.piece.is_valid_move(frm, to) and self.has_clear_path(frm, to)
+        return frm.piece.is_valid_move(frm, to) and self.__has_clear_path(frm, to)  # and frm.piece.color == self.turn
 
-    def has_clear_path(self, frm: Tile, to: Tile) -> bool:
+    def __has_clear_path(self, frm: Tile, to: Tile) -> bool:
         """ check if there are any pieces between the 'frm' tile and 'to' tile. return False if there are any"""
+        # TODO: there's a bug here where movement S and W is still allowed when the path is not clear
         # only knights ignore the clear path rule, other pieces obey
         if not isinstance(frm.piece, Knight):
-            direction, length = get_vector(frm, to)
-            if direction in (Direction.E, Direction.W):
-                tiles = [
-                    self.board.tiles[self.board.height - frm.y][x]
-                    for x in range(frm.x_int + direction.value[0], to.x_int, direction.value[0])
-                ]
-            elif direction in (Direction.N, Direction.S):
-                tiles = [
-                    self.board.tiles[self.board.height - y][frm.x_int]
-                    for y in range(frm.y + direction.value[1], to.y, direction.value[1])
-                ]
-            elif direction in DIAGONAL_DIRECTIONS:
-                tiles = [
-                    self.board.tiles[self.board.height - y][x]
-                    for x, y in zip(
-                        range(frm.x_int + direction.value[0], to.x_int, direction.value[0]),
-                        range(frm.y + direction.value[1], to.y, direction.value[1])
-                    )
-                ]
-            else:
-                tiles = []
+            x_path = self.__horizontal_path_between(frm, to)
+            y_path = self.__vertical_path_between(frm, to)
+            tiles = [self.board.tiles[self.board.height - y][x] for x, y in zip(x_path, y_path)]
 
             # if any of the tiles between frm and to is not a Blank tile, the path is not clear
             for t in tiles:
@@ -62,9 +46,19 @@ class Game:
 
         return True
 
+    @staticmethod
+    def __horizontal_path_between(frm: Tile, to: Tile) -> range:
+        drctn, lng = get_vector(frm, to)
+        return range(frm.x_int + drctn.value[0], to.x_int, drctn.value[0] or 1) or [frm.x_int] * (lng.dy - 1)
+
+    @staticmethod
+    def __vertical_path_between(frm: Tile, to: Tile) -> range:
+        drctn, lng = get_vector(frm, to)
+        return range(frm.y + drctn.value[1], to.y, drctn.value[1] or 1) or [frm.y] * (lng.dx - 1)
+
     def move(self, frm: Tile, to: Tile):
         """ move a piece """
-        if self.is_valid_move(frm, to):
+        if self.__is_valid_move(frm, to):
             from_piece = frm.piece
 
             self.board.tiles[self.board.height - to.y][to.x_int].piece = from_piece

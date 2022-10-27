@@ -30,7 +30,8 @@ body, html {
     height: calc(9 * var(--size));
     aspect-ratio: 1;
     background: var(--red);
-    border-radius: 0.25rem;
+    border-radius: calc(0.05 * var(--size));
+    grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
 }
 
 #chessboard {

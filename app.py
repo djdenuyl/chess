@@ -132,8 +132,7 @@ class App:
                     self.game.board.tile_by_name(self.selected_index),
                     self.game.board.tile_by_name(triggered_id)
                 )
-                # deselect after move
-                # TODO: what if move was not valid, still deselect?
+                # deselect after move attempt
                 self.selected_index = None
             else:
                 # update which piece is selected
