@@ -26,17 +26,18 @@ class Game:
                 for t in v:
                     self.board.tiles[self.board.height - t.y][t.x_int].piece = k(player.color)
 
-    def __is_valid_move(self, frm: Tile, to: Tile) -> bool:
+    def _is_valid_move(self, frm: Tile, to: Tile) -> bool:
         """ check if the piece on the 'frm' Tile is allowed to move to the 'to' Tile"""
-        return frm.piece.is_valid_move(frm, to) and self.__has_clear_path(frm, to)  # and frm.piece.color == self.turn
+        return frm.piece.is_valid_move(frm, to) and self._has_clear_path(frm, to)  # and frm.piece.color == self.turn
 
-    def __has_clear_path(self, frm: Tile, to: Tile) -> bool:
+    def _has_clear_path(self, frm: Tile, to: Tile) -> bool:
         """ check if there are any pieces between the 'frm' tile and 'to' tile. return False if there are any"""
         # TODO: there's a bug here where movement S and W is still allowed when the path is not clear
+        # frm, to = Tile('A', 8), Tile('A', 6)
         # only knights ignore the clear path rule, other pieces obey
         if not isinstance(frm.piece, Knight):
-            x_path = self.__horizontal_path_between(frm, to)
-            y_path = self.__vertical_path_between(frm, to)
+            x_path = self._horizontal_path_between(frm, to)
+            y_path = self._vertical_path_between(frm, to)
             tiles = [self.board.tiles[self.board.height - y][x] for x, y in zip(x_path, y_path)]
 
             # if any of the tiles between frm and to is not a Blank tile, the path is not clear
@@ -47,18 +48,18 @@ class Game:
         return True
 
     @staticmethod
-    def __horizontal_path_between(frm: Tile, to: Tile) -> range:
+    def _horizontal_path_between(frm: Tile, to: Tile) -> range:
         drctn, lng = get_vector(frm, to)
-        return range(frm.x_int + drctn.value[0], to.x_int, drctn.value[0] or 1) or [frm.x_int] * (lng.dy - 1)
+        return range(frm.x_int + drctn.value[0], to.x_int, drctn.value[0] or 1) or [frm.x_int] * (abs(lng.dy) - 1)
 
     @staticmethod
-    def __vertical_path_between(frm: Tile, to: Tile) -> range:
+    def _vertical_path_between(frm: Tile, to: Tile) -> range:
         drctn, lng = get_vector(frm, to)
-        return range(frm.y + drctn.value[1], to.y, drctn.value[1] or 1) or [frm.y] * (lng.dx - 1)
+        return range(frm.y + drctn.value[1], to.y, drctn.value[1] or 1) or [frm.y] * (abs(lng.dx) - 1)
 
     def move(self, frm: Tile, to: Tile):
         """ move a piece """
-        if self.__is_valid_move(frm, to):
+        if self._is_valid_move(frm, to):
             from_piece = frm.piece
 
             self.board.tiles[self.board.height - to.y][to.x_int].piece = from_piece
