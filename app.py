@@ -7,6 +7,7 @@ from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from src.game import Game
 from typing import Optional
+from utils.letters import LETTERS
 
 
 class App:
@@ -25,12 +26,11 @@ class App:
         return Div(
             id='app-container',
             children=[
-                Div(id='border'),
+                Div(id='border', children=self.init_labels()),
                 Div(
                     id='chessboard',
                     children=self.init_board()
-                ),
-                # Div(id='labels', children=self.init_labels())
+                )
             ]
         )
 
@@ -60,16 +60,21 @@ class App:
         return buttons
 
     def init_labels(self) -> list[Div]:
-        labels = []
-        for row in self.game.board.tiles:
-            for tile in row:
-                labels.append(
-                    Div(
-                        tile.name,
-                        className='label'
-                    )
-                )
+        empty_div = Div('', className='label')
 
+        labels = list()
+        labels.append(empty_div)
+        labels.extend([Div(i, className='letter') for i in LETTERS])
+        labels.append(empty_div)
+        for i, row in enumerate(self.game.board.tiles):
+            labels.append(Div(i + 1, className='number'))
+            for _ in row:
+                labels.append(empty_div)
+            labels.append(Div(i + 1, className='number'))
+        # letters =
+        # numbers = [Div(i, className='number') for i in range(1, 9)]
+
+        # return letters + numbers
         return labels
 
     def reset_effects(self):

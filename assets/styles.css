@@ -31,7 +31,16 @@ body, html {
     aspect-ratio: 1;
     background: var(--red);
     border-radius: calc(0.05 * var(--size));
-    grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
+    display: grid;
+    grid-template: repeat(18, 1fr) / repeat(18, 1fr);
+}
+
+.label {
+    font-size: calc(.3 * var(--size));
+    font-family: 'Noto Sans Symbols 2', sans-serif;
+    color: var(--blue);
+    display: grid;
+    place-items: center;
 }
 
 #chessboard {
