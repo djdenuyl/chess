@@ -73,17 +73,47 @@ class Game:
             self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
 
     def check(self) -> bool:
-        """ checks for the player who's turn it is whether its king is checked"""
+        """ checks for the player who's turn it is whether its king is in check"""
         king_tile, *_ = [t for t in self.board.flat if isinstance(t.piece, King) and t.piece.color == self.turn]
 
         opponent_tiles = [
             t for t in self.board.flat if t.piece.color != self.turn and not isinstance(t.piece, Blank)
         ]
 
+        # any of the opponents pieces can make a valid move to the king of the player
         if any([self._is_valid_move(tile, king_tile, self.opponent) for tile in opponent_tiles]):
             return True
 
         return False
+
+    def stalemate(self) -> bool:
+        """ checks for the player who's turn it is whether its stalemate"""
+        k_tile, *_ = [t for t in self.board.flat if isinstance(t.piece, King) and t.piece.color == self.turn]
+
+
+        if self.check():
+
+            # and all tiles around the king are either an invalid move for the king or result in a check
+            # and no piece can be put in between the king and the piece that has the king in check
+            # no piece can take the piece that has the king in check
+            return True
+
+        return False
+
+    def checkmate(self) -> bool:
+        """ checks for the player who's turn it is whether its checkmate"""
+        if self.check() and self.stalemate():
+            return True
+
+        return False
+
+    # def check_conditions(self) -> str:
+    #     if self.checkmate():
+    #         return State.CHECKMATE
+    #     elif self.stalemate():
+    #         return State.STALEMATE
+    #     elif self.check():
+    #         return State.CHECK
 
     def print(self):
         """ print out the current board state"""
@@ -120,5 +150,5 @@ def main():
         game.print()
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

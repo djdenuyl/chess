@@ -37,3 +37,17 @@ class Board:
     def index_by_name(self, name) -> int:
         """ return a tile index by its name"""
         return [i for i, tile in enumerate(chain(*self.tiles)) if tile.name == name][0]
+
+    def surrounding_tiles(self, tile: Tile):
+        surrounding_tiles = []
+        for t in self.flat:
+            if t.x_int - tile.x_int in (-1, 0, 1) \
+                    and t.y - tile.y in (-1, 0, 1) \
+                    and t != tile:
+                surrounding_tiles.append(t)
+
+        return surrounding_tiles
+
+          [
+            t for t in self.flat if abs(t.x_int - tile.x_int) in (0, 1) and abs(t.y - tile.y) in (0, 1)
+        ]
