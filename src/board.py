@@ -21,6 +21,10 @@ class Board:
             ] for h in range(self.height)
         ]
 
+    @property
+    def flat(self):
+        return chain(*self.tiles)
+
     def tile_by_index(self, idx) -> Tile:
         """ return a tile by its index """
         return list(chain(*self.tiles))[idx]

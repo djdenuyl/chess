@@ -6,6 +6,7 @@ from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from src.game import Game
+from typing import Optional
 
 
 class App:
@@ -14,7 +15,7 @@ class App:
         self.game: Game = Game()
         self.original_classes = []
         self.tiles = None
-        self.selected_index = None
+        self.selected_name = None
 
         self.dash.layout = self.layout
         self.callbacks()
@@ -94,21 +95,33 @@ class App:
         self.update_placement()
         self.reset_effects()
 
-        if self.selected_index is not None:
-            self.update_effects(self.selected_index, add=['selected'])
+        if self.selected_name is not None:
+            self.update_effects(self.selected_name, add=['selected'])
 
         return self.tiles
 
-    def update_selection(self, triggered_index):
+    def update_selection(self, triggered_name):
         """ update the selection state depending on which index was triggered. """
-        if self.selected_index is None:
-            self.selected_index = triggered_index
-        elif triggered_index == self.selected_index:
-            self.selected_index = None
-        elif triggered_index != self.selected_index:
-            self.selected_index = triggered_index
+        if self.selected_name is None \
+                and self.game.board.tile_by_name(triggered_name).piece.color == self.game.turn:
+            self.selected_name = triggered_name
+        elif triggered_name == self.selected_name:
+            self.selected_name = None
+        elif triggered_name != self.selected_name and self.selected_name is not None:
+            self.selected_name = triggered_name
         else:
             pass
+
+    def log(self, is_player_checked: Optional[bool]):
+        if self.selected_name is not None:
+            print(f"its {self.game.turn.name}'s turn, "
+                  f"{self.game.board.tile_by_name(self.selected_name).piece.__class__.__name__} at "
+                  f"{self.selected_name} is selected")
+        else:
+            print(f"its {self.game.turn.name}'s turn, nothing is selected")
+
+        if is_player_checked:
+            print(f'player {self.game.turn.name} is in check')
 
     def callbacks(self):
         @self.dash.callback(
@@ -122,21 +135,26 @@ class App:
             if ctx.triggered_id is None:
                 raise PreventUpdate
 
-            triggered_id = ctx.triggered_id.get('index')
+            triggered_name = ctx.triggered_id.get('index')
 
             # set the new tile state
             self.tiles = tiles
 
-            if self.selected_index is not None:
+            is_player_checked = None
+            if self.selected_name is not None:
                 self.game.move(
-                    self.game.board.tile_by_name(self.selected_index),
-                    self.game.board.tile_by_name(triggered_id)
+                    self.game.board.tile_by_name(self.selected_name),
+                    self.game.board.tile_by_name(triggered_name)
                 )
+
+                is_player_checked = self.game.check()
                 # deselect after move attempt
-                self.selected_index = None
+                self.selected_name = None
             else:
                 # update which piece is selected
-                self.update_selection(triggered_id)
+                self.update_selection(triggered_name)
+
+            self.log(is_player_checked)
 
             return self.update_tiles()
 
