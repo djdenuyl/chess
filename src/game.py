@@ -2,10 +2,12 @@
 Created on 2022-10-19
 @author: David den Uyl (djdenuyl@gmail.com)
 """
+from itertools import compress
 from src.piece import Blank, King
 from src.player import WHITE_PLAYER, BLACK_PLAYER
 from src.tile import Tile
 from src.board import Board
+from typing import Iterator
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 
@@ -40,7 +42,7 @@ class Game:
 
         return True
 
-    def _is_under_thread_by(self, tile) -> list[Tile]:
+    def _is_under_thread_by(self, tile) -> Iterator[Tile]:
         """ returns a list of all opponent occupied tiles that can reach the tile within one move"""
         if isinstance(tile.piece, Blank):
             return []
@@ -48,7 +50,7 @@ class Game:
         opponent_tiles = self.board.opponent_tiles(tile)
 
         # if any of the opponents pieces can make a valid move to the piece
-        return [opponent_tiles[self._is_valid_move(opponent_tile, tile)] for opponent_tile in opponent_tiles]
+        return compress(opponent_tiles, [self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles])
 
     def _is_under_thread(self, tile) -> bool:
         """ check if a tile is under reachable by a piece from the opponent within one move"""
@@ -73,9 +75,9 @@ class Game:
         if self._is_valid_move(frm, to) and frm.piece.color == self.turn:
             from_piece = frm.piece
 
+            self.board.tiles[self.board.height - frm.y][frm.x_int].piece.has_moved = True
             self.board.tiles[self.board.height - to.y][to.x_int].piece = from_piece
             self.board.tiles[self.board.height - frm.y][frm.x_int].piece = Blank()
-            self.board.tiles[self.board.height - frm.y][frm.x_int].piece.has_moved = True
 
             # set the turn to the other player
             self.turn = opponent(self.turn)
