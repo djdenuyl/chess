@@ -2,13 +2,12 @@
 Created on 2022-10-19
 @author: David den Uyl (djdenuyl@gmail.com)
 """
-from src.piece import Blank, Knight, King
+from src.piece import Blank, King
 from src.player import WHITE_PLAYER, BLACK_PLAYER
 from src.tile import Tile
 from src.board import Board
 from utils.color import Color, opponent
 from utils.letters import LETTERS
-from utils.vector import get_vector
 
 
 class Game:
@@ -32,42 +31,42 @@ class Game:
 
     def _has_clear_path(self, frm: Tile, to: Tile) -> bool:
         """ check if there are any pieces between the 'frm' tile and 'to' tile. return False if there are any"""
-        # only knights ignore the clear path rule, other pieces obey
-        if not isinstance(frm.piece, Knight):
-            x_idx = self._horizontal_indices_between(frm, to)
-            y_idx = self._vertical_indices_between(frm, to)
-            tiles = [self.board.tiles[self.board.height - y][x] for x, y in zip(x_idx, y_idx)]
+        tiles = self.board.tiles_between(frm, to)
 
-            # if any of the tiles between frm and to is not a Blank tile, the path is not clear
-            for t in tiles:
-                if not isinstance(t.piece, Blank):
-                    return False
+        # if any of the tiles between frm and to is not a Blank tile, the path is not clear
+        for t in tiles:
+            if not isinstance(t.piece, Blank):
+                return False
 
         return True
 
-    def _is_under_thread(self, tile):
+    def _is_under_thread_by(self, tile) -> list[Tile]:
+        """ returns a list of all opponent occupied tiles that can reach the tile within one move"""
         if isinstance(tile.piece, Blank):
-            return False
+            return []
 
         opponent_tiles = self.board.opponent_tiles(tile)
 
         # if any of the opponents pieces can make a valid move to the piece
-        if any([self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles]):
+        return [opponent_tiles[self._is_valid_move(opponent_tile, tile)] for opponent_tile in opponent_tiles]
+
+    def _is_under_thread(self, tile) -> bool:
+        """ check if a tile is under reachable by a piece from the opponent within one move"""
+        if isinstance(tile.piece, Blank):
+            return False
+
+        # if any of the opponents pieces can make a valid move to the piece
+        if any(self._is_under_thread_by(tile)):
             return True
 
         return False
 
-    @staticmethod
-    def _horizontal_indices_between(frm: Tile, to: Tile) -> range:
-        """ collect the axis indices horizontally between the frm and to tile"""
-        drc, lng = get_vector(frm, to)
-        return range(frm.x_int + drc.value[0], to.x_int, drc.value[0] or 1) or [frm.x_int] * (abs(lng.dy) - 1)
+    def _cant_move_king(self) -> bool:
+        """ check if the player whose turn it is can move his king from its current tile"""
+        king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
+        surrounding_tiles = self.board.surrounding_tiles(king_tile)
 
-    @staticmethod
-    def _vertical_indices_between(frm: Tile, to: Tile) -> range:
-        """ collect the axis indices vertically between the frm and to tile"""
-        drc, lng = get_vector(frm, to)
-        return range(frm.y + drc.value[1], to.y, drc.value[1] or 1) or [frm.y] * (abs(lng.dx) - 1)
+        return all([not self._is_valid_move(king_tile, s) or self._is_under_thread(s) for s in surrounding_tiles])
 
     def move(self, frm: Tile, to: Tile):
         """ move a piece"""
@@ -76,6 +75,7 @@ class Game:
 
             self.board.tiles[self.board.height - to.y][to.x_int].piece = from_piece
             self.board.tiles[self.board.height - frm.y][frm.x_int].piece = Blank()
+            self.board.tiles[self.board.height - frm.y][frm.x_int].piece.has_moved = True
 
             # set the turn to the other player
             self.turn = opponent(self.turn)
@@ -86,34 +86,27 @@ class Game:
 
         return self._is_under_thread(king_tile)
 
-    def stalemate(self) -> bool:
-        """ checks for the player who's turn it is whether its stalemate"""
-        king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
-        surrounding_tiles = self.board.surrounding_tiles(king_tile)
-
-        for surrounding_tile in surrounding_tiles:
-            # all tiles around the king are either an invalid move for the king or result in a check
-            if not self._is_valid_move(king_tile, surrounding_tile) or self._is_under_thread(surrounding_tile):
-                # and no piece can be put in between the king and the piece that has the king in check
-                # no piece can take the piece that has the king in check
-                return True
-
-        return False
-
-    def checkmate(self) -> bool:
-        """ checks for the player who's turn it is whether its checkmate"""
-        if self.check() and self.stalemate():
-            return True
-
-        return False
-
-    # def check_conditions(self) -> str:
-    #     if self.checkmate():
-    #         return State.CHECKMATE
-    #     elif self.stalemate():
-    #         return State.STALEMATE
-    #     elif self.check():
-    #         return State.CHECK
+    # def checkmate(self) -> bool:
+    #     """ checks for the player who's turn it is whether its checkmate"""
+    #     king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
+    #     threatening_tiles = self._is_under_thread_by(king_tile)
+    #
+    #     for threatening_tile in threatening_tiles:
+    #         between_tiles = self.board.tiles_between(threatening_tile, king_tile)
+    #         for between_tile in between_tiles:
+    #             opponent_tiles = self.board.tiles_by_color(opponent(self.turn))
+    #             for opponent_tile in opponent_tiles:
+    #
+    #     # if 1) the king is in check
+    #     # 2) all tiles around the king are either an invalid move for the king or result in a check
+    #     # 3) and no piece can be put in between the king and the piece that has the king in check
+    #     # 4) no piece can take the piece that has the king in check
+    #     if self.check() \
+    #             and self._cant_move_king() \
+    #             and self.board.tiles_between():
+    #         return True
+    #
+    #     return False
 
     def print(self):
         """ print out the current board state"""
