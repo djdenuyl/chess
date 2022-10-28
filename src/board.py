@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
 from itertools import chain
+from src.piece import PieceType, Blank
 from src.tile import Tile
+from typing import Optional, Type
+from utils.color import Color
 from utils.letters import LETTERS
 
 
@@ -34,11 +37,19 @@ class Board:
         tile, *_ = [t for t in list(chain(*self.tiles)) if t.name == name]
         return tile
 
+    def tiles_by_piece_type(self, piece_type: Type[PieceType], color: Optional[Color] = None) -> Optional[list[Tile]]:
+        """ return the tiles containing a particular piece, optionally also by its color"""
+        if color is not None:
+            return [t for t in self.flat if isinstance(t.piece, piece_type)]
+
+        return [t for t in self.flat if isinstance(t.piece, piece_type) and t.piece.color == color]
+
     def index_by_name(self, name) -> int:
         """ return a tile index by its name"""
         return [i for i, tile in enumerate(chain(*self.tiles)) if tile.name == name][0]
 
     def surrounding_tiles(self, tile: Tile):
+        """ return the tiles surrounding the given tile """
         surrounding_tiles = []
         for t in self.flat:
             if t.x_int - tile.x_int in (-1, 0, 1) \
@@ -48,6 +59,8 @@ class Board:
 
         return surrounding_tiles
 
-          [
-            t for t in self.flat if abs(t.x_int - tile.x_int) in (0, 1) and abs(t.y - tile.y) in (0, 1)
+    def opponent_tiles(self, tile: Tile):
+        """ return all the tiles occupied by the opponent of the piece at the given tile. """
+        return [
+            t for t in self.flat if t.piece.color != tile.piece.color and not isinstance(t.piece, Blank)
         ]

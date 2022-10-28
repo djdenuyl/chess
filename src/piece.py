@@ -3,6 +3,7 @@ Created on 2022-10-19
 @author: David den Uyl (djdenuyl@gmail.com)
 """
 from abc import ABC, abstractmethod
+from typing import TypeVar
 from utils.color import Color
 from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
 from utils.start_positions import BLACK_PAWN_START_POSITIONS, WHITE_PAWN_START_POSITIONS
@@ -67,6 +68,9 @@ class Pawn(Piece):
                     return True
 
         return False
+
+
+PieceType = TypeVar('PieceType', bound=Piece)
 
 
 class Rook(Piece):
