@@ -73,14 +73,16 @@ class Game:
     def move(self, frm: Tile, to: Tile):
         """ move a piece"""
         if self._is_valid_move(frm, to) and frm.piece.color == self.turn:
-            from_piece = frm.piece
+            if not self.check():
+                self.board.tiles[self.board.height - frm.y][frm.x_int].piece.has_moved = True
+                self.board.tiles[self.board.height - to.y][to.x_int].piece = frm.piece
+                self.board.tiles[self.board.height - frm.y][frm.x_int].piece = Blank()
 
-            self.board.tiles[self.board.height - frm.y][frm.x_int].piece.has_moved = True
-            self.board.tiles[self.board.height - to.y][to.x_int].piece = from_piece
-            self.board.tiles[self.board.height - frm.y][frm.x_int].piece = Blank()
-
-            # set the turn to the other player
-            self.turn = opponent(self.turn)
+                # set the turn to the other player
+                self.turn = opponent(self.turn)
+            else:
+                # TODO: implement that only check resolve can
+                self.turn = opponent(self.turn)
 
     def check(self) -> bool:
         """ checks for the player who's turn it is whether its king is in check"""

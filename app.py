@@ -7,6 +7,9 @@ from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from src.game import Game
 from typing import Optional
+
+from src.piece import Pawn
+from utils.color import Color
 from utils.letters import LETTERS
 
 
@@ -26,6 +29,7 @@ class App:
         return Div(
             id='app-container',
             children=[
+                Div(id='indicator', children=Div(id='signal', className='signal')),
                 Div(
                     id='border',
                     children=self.init_labels()
@@ -36,6 +40,10 @@ class App:
                 )
             ]
         )
+
+    @property
+    def turn_message(self):
+        return f"{Pawn(self.game.turn)}"
 
     def play(self, **kwargs):
         """ play the game """
@@ -155,6 +163,19 @@ class App:
             self.log(is_player_checked)
 
             return self.update_tiles()
+
+        @self.dash.callback(
+            Output('signal', 'className'),
+            Input('chessboard', 'children')
+        )
+        def update_indicator(_):
+            clss = ['signal']
+            if self.game.turn == Color.BLACK:
+                clss.append('move')
+            if self.game.check():
+                clss.append('check')
+
+            return ' '.join(clss)
 
 
 if __name__ == '__main__':
