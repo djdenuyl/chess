@@ -44,7 +44,7 @@ class Board:
 
     def tiles_by_piece_type(self, piece_type: Type[PieceType], color: Optional[Color] = None) -> list[Tile]:
         """ return the tiles containing a particular piece, optionally also by its color"""
-        if color is not None:
+        if color is None:
             return [t for t in self.flat if isinstance(t.piece, piece_type)]
 
         return [t for t in self.flat if isinstance(t.piece, piece_type) and t.piece.color == color]

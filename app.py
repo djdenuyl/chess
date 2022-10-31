@@ -6,9 +6,9 @@ from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from src.game import Game
-from typing import Optional
-
 from src.piece import Pawn
+from src.state import State as GameState
+from typing import Optional
 from utils.color import Color
 from utils.letters import LETTERS
 
@@ -118,7 +118,7 @@ class App:
         else:
             pass
 
-    def log(self, is_player_checked: Optional[bool]):
+    def log(self, state: Optional[GameState]):
         if self.selected_name is not None:
             print(f"its {self.game.turn.name}'s turn, "
                   f"{self.game.board.tile_by_name(self.selected_name).piece.__class__.__name__} at "
@@ -126,8 +126,8 @@ class App:
         else:
             print(f"its {self.game.turn.name}'s turn, nothing is selected")
 
-        if is_player_checked:
-            print(f'player {self.game.turn.name} is in check')
+        if state is not None:
+            print(f'player {self.game.turn.name}: {state.name}')
 
     def callbacks(self):
         @self.dash.callback(
@@ -146,21 +146,21 @@ class App:
             # set the new tile state
             self.tiles = tiles
 
-            is_player_checked = None
+            game_state = None
             if self.selected_name is not None:
                 self.game.move(
                     self.game.board.tile_by_name(self.selected_name),
                     self.game.board.tile_by_name(triggered_name)
                 )
 
-                is_player_checked = self.game.check()
+                game_state = self.game.state()
                 # deselect after move attempt
                 self.selected_name = None
             else:
                 # update which piece is selected
                 self.update_selection(triggered_name)
 
-            self.log(is_player_checked)
+            self.log(game_state)
 
             return self.update_tiles()
 

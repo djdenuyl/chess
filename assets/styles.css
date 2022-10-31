@@ -40,12 +40,16 @@ body, html {
     border-radius: 50%;
     top: calc(6 * var(--size));
     transition: 0.5s;
-    animation: throb 1s infinite;
+    /* animation: bounce 1s ease-out infinite; */
 }
 
 .move {
     top: 0;
     transition: 0.5s;
+}
+
+@keyframes bounce {
+    90% {transform: translateX(calc(-0.2 * var(--size)));}
 }
 
 .check {
@@ -101,7 +105,7 @@ body, html {
 
 button {
     font-size: calc(.6 * var(--size));
-    font-family: 'Noto Sans Symbols 2', sans-serif;
+    /* font-family: 'Noto Sans Symbols 2', sans-serif; */
     color: var(--blue);
 }
 
