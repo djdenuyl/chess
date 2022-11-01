@@ -25,6 +25,37 @@ body, html {
     height: 100vh;
 }
 
+#indicator {
+    grid-area: 1 / 1 / 1 / 1;
+    height: calc(6.5 * var(--size));
+    width: calc(.5 * var(--size));
+    margin-right: calc(10 * var(--size));
+}
+
+.signal {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--yellow);
+    border-radius: 50%;
+    top: calc(6 * var(--size));
+    transition: 0.5s;
+    /* animation: bounce 1s ease-out infinite; */
+}
+
+.move {
+    top: 0;
+    transition: 0.5s;
+}
+
+@keyframes bounce {
+    90% {transform: translateX(calc(-0.2 * var(--size)));}
+}
+
+.check {
+    background: var(--red);
+}
+
 #border {
     grid-area: 1 / 1 / 1 / 1;
     height: calc(9 * var(--size));
@@ -41,8 +72,8 @@ body, html {
 }
 
 .label {
-    font-size: calc(.3 * var(--size));
-    font-family: 'Noto Sans Symbols 2', sans-serif;
+    font-size: calc(.2 * var(--size));
+    font-family: 'Open Sans', sans-serif;
     color: var(--blue);
 }
 
@@ -74,7 +105,7 @@ body, html {
 
 button {
     font-size: calc(.6 * var(--size));
-    font-family: 'Noto Sans Symbols 2', sans-serif;
+    /* font-family: 'Noto Sans Symbols 2', sans-serif; */
     color: var(--blue);
 }
 
@@ -99,16 +130,4 @@ button {
 
 @keyframes throb {
     50% {font-size: calc(var(--size) * 0.75);}
-}
-
-#labels {
-    display: grid;
-    grid-area: 1 / 1 / 1 / 1;
-    grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
-}
-
-.label {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 0.75rem;
-    margin: 2px;
 }

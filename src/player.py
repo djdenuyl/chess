@@ -8,7 +8,6 @@ from typing import Type
 from src.piece import Piece, Pawn, Rook, Knight, Bishop, Queen, King
 from src.tile import Tile, tiles
 from utils.color import Color
-from utils.start_positions import WHITE_PAWN_START_POSITIONS, BLACK_PAWN_START_POSITIONS
 
 
 @dataclass
@@ -20,7 +19,7 @@ class Player:
 WHITE_PLAYER = Player(
     color=Color.WHITE,
     start_positions={
-        Pawn: tiles(WHITE_PAWN_START_POSITIONS),
+        Pawn: tiles(['A2', 'B2', 'C2', 'D2', 'E2', 'F2', 'G2', 'H2']),
         Rook: tiles(['A1', 'H1']),
         Knight: tiles(['B1', 'G1']),
         Bishop: tiles(['C1', 'F1']),
@@ -32,7 +31,7 @@ WHITE_PLAYER = Player(
 BLACK_PLAYER = Player(
     color=Color.BLACK,
     start_positions={
-        Pawn: tiles(BLACK_PAWN_START_POSITIONS),
+        Pawn: tiles(['A7', 'B7', 'C7', 'D7', 'E7', 'F7', 'G7', 'H7']),
         Rook: tiles(['A8', 'H8']),
         Knight: tiles(['B8', 'G8']),
         Bishop: tiles(['C8', 'F8']),

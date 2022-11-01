@@ -3,9 +3,9 @@ Created on 2022-10-19
 @author: David den Uyl (djdenuyl@gmail.com)
 """
 from abc import ABC, abstractmethod
+from typing import TypeVar
 from utils.color import Color
 from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
-from utils.start_positions import BLACK_PAWN_START_POSITIONS, WHITE_PAWN_START_POSITIONS
 from utils.vector import get_vector
 
 
@@ -13,6 +13,7 @@ class Piece(ABC):
     """ a piece on the board """
     def __init__(self, color: Color):
         self.color = color
+        self.has_moved = False
 
     def __str__(self):
         return self.symbol.get(self.color)
@@ -26,7 +27,7 @@ class Piece(ABC):
         """ a property containing the symbology for the piece. used to return the str repr for the piece"""
 
     @abstractmethod
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         """ this method implements whether movement of Tile frm to Tile to is allowed for the piece"""
 
 
@@ -35,9 +36,8 @@ class Pawn(Piece):
     def symbol(self):
         return {Color.BLACK: '♟', Color.WHITE: '♙'}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
-
         # regular move
         if length.size == 1:
             if (self.color == Color.BLACK and direction == Direction.S
@@ -46,15 +46,9 @@ class Pawn(Piece):
                 return True
 
         # start move
-        if length.size == 2:
-            # TODO: frm.name in PAWN_START_POSITIONS should really be a check on tiles instead of strings
-            # TODO: but importing anything from the tiles module here results in a circular import
-            if (self.color == Color.BLACK
-                and direction == Direction.S
-                and frm.name in BLACK_PAWN_START_POSITIONS) \
-                    or (self.color == Color.WHITE
-                        and direction == Direction.N
-                        and frm.name in WHITE_PAWN_START_POSITIONS) \
+        if length.size == 2 and not self.has_moved:
+            if (self.color == Color.BLACK and direction == Direction.S) \
+                    or (self.color == Color.WHITE and direction == Direction.N) \
                     and isinstance(to.piece, Blank):
 
                 return True
@@ -69,12 +63,15 @@ class Pawn(Piece):
         return False
 
 
+PieceType = TypeVar('PieceType', bound=Piece)
+
+
 class Rook(Piece):
     @property
     def symbol(self):
         return {Color.BLACK: '♜', Color.WHITE: '♖'}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, _ = get_vector(frm, to)
 
         if direction in STRAIGHT_DIRECTIONS \
@@ -89,7 +86,7 @@ class Knight(Piece):
     def symbol(self):
         return {Color.BLACK: '♞', Color.WHITE: '♘'}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
         if direction in DIAGONAL_DIRECTIONS\
@@ -105,7 +102,7 @@ class Bishop(Piece):
     def symbol(self):
         return {Color.BLACK: '♝', Color.WHITE: '♗'}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
         if direction in DIAGONAL_DIRECTIONS \
@@ -121,7 +118,7 @@ class Queen(Piece):
     def symbol(self):
         return {Color.BLACK:  '♛', Color.WHITE: '♕'}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
         if ((direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy))
@@ -137,7 +134,7 @@ class King(Piece):
     def symbol(self):
         return {Color.BLACK:  '♚', Color.WHITE: '♔'}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
         if ((direction in DIAGONAL_DIRECTIONS and abs(length.dx) == abs(length.dy))
@@ -159,7 +156,7 @@ class Blank(Piece):
     def symbol(self):
         return {Color.NONE:  ''}
 
-    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:
+    def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         """ never move a blank field"""
         return False
 
