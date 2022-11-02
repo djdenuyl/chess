@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from src.piece import Piece, Blank
-from typing import Optional, TypeVar
+from typing import Optional
 from utils.letters import LETTERS
 
 
@@ -30,7 +30,6 @@ class Tile:
         self.__set_x_int()
         self.__set_name()
         self.__set_color()
-
 
 
 def tiles(names: list) -> list[Tile]:

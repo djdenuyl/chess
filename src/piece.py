@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TypeVar
 from utils.color import Color
 from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
+from utils.length import Length
 from utils.vector import get_vector
 
 
@@ -36,6 +37,14 @@ class Pawn(Piece):
     def symbol(self):
         return {Color.BLACK: '♟', Color.WHITE: '♙'}
 
+    def is_diagonal_move(self, direction: Direction, length: Length) -> bool:
+        if abs(length.dx) == 1 and abs(length.dy) == 1:
+            if self.color == Color.BLACK and direction in (Direction.SE, Direction.SW) \
+                    or self.color == Color.WHITE and direction in (Direction.NE, Direction.NW):
+                return True
+
+        return False
+
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
         # regular move / start move
@@ -46,11 +55,9 @@ class Pawn(Piece):
                 return True
 
         # taking another piece
-        if abs(length.dx) == 1 and abs(length.dy) == 1 and to.piece.color != self.color:
-            if self.color == Color.BLACK and direction in (Direction.SE, Direction.SW) \
-                    or self.color == Color.WHITE and direction in (Direction.NE, Direction.NW):
-                if not isinstance(to.piece, Blank):
-                    return True
+        if self.is_diagonal_move(direction, length) and to.piece.color != self.color:
+            if not isinstance(to.piece, Blank):
+                return True
 
         return False
 

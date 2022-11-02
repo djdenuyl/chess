@@ -11,6 +11,7 @@ from src.board import Board
 from typing import Iterator, Optional, Type
 from utils.color import Color, opponent
 from utils.letters import LETTERS
+from utils.vector import get_vector
 
 
 class Game:
@@ -66,7 +67,7 @@ class Game:
 
     def _cant_move_king(self) -> bool:
         """ check if the player whose turn it is can move his king from its current tile"""
-        king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
+        [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
         surrounding_tiles = self.board.surrounding_tiles(king_tile)
 
         return all([not self._is_valid_move(king_tile, s) or self._is_under_thread(s) for s in surrounding_tiles])
@@ -74,7 +75,7 @@ class Game:
     def _can_move_piece_between_king(self) -> bool:
         """ checks if any piece can be moved between the king and any piece threatening the king
         TODO: does this also work for double checks?"""
-        king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
+        [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
         threatening_tiles = self._is_under_thread_by(king_tile)
         own_tiles = self.board.tiles_by_color(self.turn)
 
@@ -88,16 +89,29 @@ class Game:
 
     def _can_take_piece_threatening_king(self) -> bool:
         """ checks if any piece can take the piece threatening the king"""
-        king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
+        [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
         threatening_tiles = self._is_under_thread_by(king_tile)
         if any([self._is_under_thread(tt) for tt in threatening_tiles]):
             return True
 
         return False
 
+    def _en_passant(self, frm: Tile, to: Tile) -> bool:
+        """ checks whether the move is eligible for en passant"""
+        direction, length = get_vector(frm, to)
+
+        if isinstance(frm.piece, Pawn) \
+                and frm.piece.is_diagonal_move(direction, length) \
+                and isinstance(self.board.tiles[self.board.height - frm.y - direction[1]][frm.x_int].piece, Pawn) \
+                and True:  # TODO: check that the enemy pawn has move 2 tiles in the last turn
+            return True
+
+        return False
+
     def move(self, frm: Tile, to: Tile):
         """ move a piece"""
-        if self._is_valid_move(frm, to) and frm.piece.color == self.turn:
+        if (self._is_valid_move(frm, to) or self._en_passant(frm, to)) \
+                and frm.piece.color == self.turn:
             frm_piece = frm.piece
             to_piece = to.piece
 
@@ -117,7 +131,7 @@ class Game:
 
     def check(self) -> bool:
         """ checks for the player who's turn it is whether its king is in check"""
-        king_tile, *_ = self.board.tiles_by_piece_type(King, self.turn)
+        [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
 
         return self._is_under_thread(king_tile)
 
