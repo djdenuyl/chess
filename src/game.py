@@ -147,7 +147,7 @@ class Game:
     def which_pawn_promotable(self) -> Optional[Tile]:
         """ checks if any pawn of the player whose turn it is, is in a position to be promoted and returns the
         tile containing the pawn that is promotable"""
-        for tile in self.board.tiles_by_piece_type(Pawn, self.turn):
+        for tile in self.board.tiles_by_piece_type(Pawn):
             if tile.y in (1, 8):
                 return tile
 
