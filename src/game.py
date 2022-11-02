@@ -3,12 +3,12 @@ Created on 2022-10-19
 @author: David den Uyl (djdenuyl@gmail.com)
 """
 from itertools import compress
-from src.piece import Blank, King
+from src.piece import Blank, King, PieceType, Pawn, Queen, Bishop, Knight, Rook
 from src.player import WHITE_PLAYER, BLACK_PLAYER
 from src.state import State
 from src.tile import Tile
 from src.board import Board
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Type
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 
@@ -134,6 +134,22 @@ class Game:
             return True
 
         return False
+
+    def promote(self, pawn_tile: Tile, piece_type: Type[PieceType]):
+        """ promotes a pawn to another piece when it reaches the other side """
+        if not isinstance(pawn_tile.piece, Pawn) \
+                or not any(piece_type == p for p in (Queen, Bishop, Knight, Rook)):
+            return
+
+        self.board.tiles[self.board.height - pawn_tile.y][pawn_tile.x_int].piece = \
+            piece_type(color=pawn_tile.piece.color)
+
+    def which_pawn_promotable(self) -> Optional[Tile]:
+        """ checks if any pawn of the player whose turn it is, is in a position to be promoted and returns the
+        tile containing the pawn that is promotable"""
+        for tile in self.board.tiles_by_piece_type(Pawn, self.turn):
+            if tile.y in (1, 8):
+                return tile
 
     def state(self) -> Optional[State]:
         """ return the current game state """

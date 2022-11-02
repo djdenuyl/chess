@@ -11,6 +11,8 @@
     --red: #E76F51;
 
     --size: 5rem;
+    --white-tile: var(--white);
+    --black-tile: var(--orange);
 }
 
 body, html {
@@ -56,6 +58,28 @@ body, html {
     background: var(--red);
 }
 
+.promotion-tile {
+    display: grid;
+    grid-template: repeat(2, calc(.5 * var(--size))) / repeat(2, calc(.5 * var(--size)));
+    place-items: center;
+    font-size: calc(.4 * var(--size));
+    color: var(--blue);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.promotion-tile > button {
+    all: unset;
+    cursor: pointer;
+    justify-self: stretch;
+    display: grid;
+    place-items: center;
+}
+
+.promotion-tile > button:hover {
+    background: var(--teal);
+}
+
 #border {
     grid-area: 1 / 1 / 1 / 1;
     height: calc(9 * var(--size));
@@ -97,7 +121,7 @@ body, html {
     place-items: center;
 }
 
-#chessboard {
+#chessboard, #promotion {
     display: grid;
     grid-area: 1 / 1 / 1 / 1;
     grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
@@ -117,11 +141,11 @@ button {
 
 
 .⬜ {
-    background: var(--white);
+    background: var(--white-tile);
 }
 
 .⬛ {
-    background: var(--orange);
+    background: var(--black-tile);
 }
 
 .selected {

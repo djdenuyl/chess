@@ -38,19 +38,11 @@ class Pawn(Piece):
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
-        # regular move
-        if length.size == 1:
+        # regular move / start move
+        if length.size == 1 or (length.size == 2 and not self.has_moved):
             if (self.color == Color.BLACK and direction == Direction.S
                 or self.color == Color.WHITE and direction == Direction.N) \
                     and isinstance(to.piece, Blank):
-                return True
-
-        # start move
-        if length.size == 2 and not self.has_moved:
-            if (self.color == Color.BLACK and direction == Direction.S) \
-                    or (self.color == Color.WHITE and direction == Direction.N) \
-                    and isinstance(to.piece, Blank):
-
                 return True
 
         # taking another piece
@@ -161,7 +153,11 @@ class Blank(Piece):
         return False
 
 
-if __name__ == '__main__':
-    p = Pawn(Color.BLACK)
-
-    print(p.__repr__())
+PIECE_TYPE_MAPPER = {
+    'king': King,
+    'queen': Queen,
+    'bishop': Bishop,
+    'knight': Knight,
+    'rook': Rook,
+    'pawn': Pawn
+}

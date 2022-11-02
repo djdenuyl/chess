@@ -6,7 +6,7 @@ from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from src.game import Game
-from src.piece import Pawn
+from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
 from typing import Optional
 from utils.color import Color
@@ -20,6 +20,7 @@ class App:
         self.original_classes = []
         self.tiles = None
         self.selected_name = None
+        self.promotion_event = False
 
         self.dash.layout = self.layout
         self.callbacks()
@@ -30,6 +31,7 @@ class App:
             id='app-container',
             children=[
                 Div(id='indicator', children=Div(id='signal', className='signal')),
+                Div(id='promotion'),
                 Div(
                     id='border',
                     children=self.init_labels()
@@ -40,10 +42,6 @@ class App:
                 )
             ]
         )
-
-    @property
-    def turn_message(self):
-        return f"{Pawn(self.game.turn)}"
 
     def play(self, **kwargs):
         """ play the game """
@@ -70,8 +68,26 @@ class App:
 
         return buttons
 
+    def init_promotion_tile(self, tile) -> Div:
+        """ create a promotion tile, where a player can select which piece to promote a pawn to"""
+        return Div(
+            className='promotion-tile',
+            style={
+                'grid-row': f'{self.game.board.height - tile.y + 1} / span 1',
+                'grid-column': f'{tile.x_int + 1} / span 1',
+                'background': 'var(--white-tile)' if tile.color == '⬜' else 'var(--black-tile)'
+            },
+            children=[
+                Button(id={'type': 'promotion', 'index': 'queen'}, children=str(Queen(self.game.turn))),
+                Button(id={'type': 'promotion', 'index': 'bishop'}, children=str(Bishop(self.game.turn))),
+                Button(id={'type': 'promotion', 'index': 'knight'}, children=str(Knight(self.game.turn))),
+                Button(id={'type': 'promotion', 'index': 'rook'}, children=str(Rook(self.game.turn))),
+            ]
+        )
+
     @staticmethod
     def init_labels() -> list[Div]:
+        """ create the labels at the border of the chessboard"""
         top_letters = Div(className='label top letters', children=[Div(i) for i in LETTERS])
         lft_numbers = Div(className='label lft numbers', children=[Div(i) for i in range(8, 0, -1)])
         rgt_numbers = Div(className='label rgt numbers ', children=[Div(i) for i in range(8, 0, -1)])
@@ -138,7 +154,7 @@ class App:
         )
         def render(_, tiles):
             """ render a new frame of the game """
-            if ctx.triggered_id is None:
+            if ctx.triggered_id is None or self.promotion_event:
                 raise PreventUpdate
 
             triggered_name = ctx.triggered_id.get('index')
@@ -176,6 +192,41 @@ class App:
                 clss.append('check')
 
             return ' '.join(clss)
+
+        @self.dash.callback(
+            Output('promotion', 'children'),
+            Input({'type': 'tile', 'index': ALL}, 'n_clicks'),
+            Input({'type': 'promotion', 'index': ALL}, 'n_clicks'),
+            prevent_initial_callback=True
+        )
+        def handle_promotion(*_):
+            """ if a promotion is triggered, handle the event """
+            tile = self.game.which_pawn_promotable()
+
+            if ctx.triggered_id is None:
+                raise PreventUpdate
+            elif ctx.triggered_id.get('type') == 'tile':
+                if tile is None:
+                    raise PreventUpdate
+
+                self.promotion_event = True
+                print('promotion event started')
+
+                return self.init_promotion_tile(tile)
+            elif ctx.triggered_id.get('type') == 'promotion':
+                self.game.promote(
+                    tile,
+                    piece_type=PIECE_TYPE_MAPPER.get(
+                        ctx.triggered_id.get('index')
+                    )
+                )
+
+                self.promotion_event = False
+                print('promotion event finished')
+
+                return None
+            else:
+                raise ValueError()
 
 
 if __name__ == '__main__':
