@@ -100,10 +100,13 @@ class Game:
         """ checks whether the move is eligible for en passant"""
         direction, length = get_vector(frm, to)
 
+        neighbor_tile = self.board.tiles[self.board.height - frm.y][frm.x_int + direction.value[0]]
+
         if isinstance(frm.piece, Pawn) \
                 and frm.piece.is_diagonal_move(direction, length) \
-                and isinstance(self.board.tiles[self.board.height - frm.y - direction[1]][frm.x_int].piece, Pawn) \
-                and True:  # TODO: check that the enemy pawn has move 2 tiles in the last turn
+                and isinstance(neighbor_tile.piece, Pawn) \
+                and neighbor_tile.piece.color != frm.piece.color \
+                and neighbor_tile.piece.is_passable:
             return True
 
         return False

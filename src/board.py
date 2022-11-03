@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from src.piece import PieceType, Blank, Knight
 from src.tile import Tile
-from typing import Optional, Type
+from typing import Optional, Type, Iterator
 from utils.color import Color
 from utils.letters import LETTERS
 from utils.vector import get_vector
@@ -26,7 +26,8 @@ class Board:
         ]
 
     @property
-    def flat(self):
+    def flat(self) -> Iterator:
+        """ return a flattened unnested chain of tiles"""
         return chain(*self.tiles)
 
     def tile_by_index(self, idx) -> Tile:
@@ -64,13 +65,15 @@ class Board:
 
         return surrounding_tiles
 
-    def opponent_tiles(self, tile: Tile):
+    def opponent_tiles(self, tile: Tile) -> list[Tile]:
         """ return all the tiles occupied by the opponent of the piece at the given tile. """
         return [
             t for t in self.flat if t.piece.color != tile.piece.color and not isinstance(t.piece, Blank)
         ]
 
     def tiles_between(self, frm: Tile, to: Tile) -> list[Tile]:
+        """ return all the tiles between two tiles. Will only return tiles for on-axis and diagonal comparisons.
+        Will return an empty list for knights. """
         # only knights ignore the clear path rule, other pieces obey
         if not isinstance(frm.piece, Knight):
             x_idx = self._horizontal_indices_between(frm, to)

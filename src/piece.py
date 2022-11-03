@@ -4,7 +4,7 @@ Created on 2022-10-19
 """
 from abc import ABC, abstractmethod
 from typing import TypeVar
-from utils.color import Color
+from utils.color import Color, opponent
 from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
 from utils.length import Length
 from utils.vector import get_vector
@@ -12,6 +12,7 @@ from utils.vector import get_vector
 
 class Piece(ABC):
     """ a piece on the board """
+
     def __init__(self, color: Color):
         self.color = color
         self.has_moved = False
@@ -33,6 +34,10 @@ class Piece(ABC):
 
 
 class Pawn(Piece):
+    def __init__(self, color: Color):
+        super().__init__(color)
+        self.is_passable = False
+
     @property
     def symbol(self):
         return {Color.BLACK: '♟', Color.WHITE: '♙'}
@@ -45,19 +50,28 @@ class Pawn(Piece):
 
         return False
 
+    def is_orthogonal_move(self, direction: Direction, length: Length) -> bool:
+        if length.size == 1 or (length.size == 2 and not self.has_moved):
+            if self.color == Color.BLACK and direction == Direction.S \
+                    or self.color == Color.WHITE and direction == Direction.N:
+                return True
+
+        return False
+
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
         # regular move / start move
-        if length.size == 1 or (length.size == 2 and not self.has_moved):
-            if (self.color == Color.BLACK and direction == Direction.S
-                or self.color == Color.WHITE and direction == Direction.N) \
-                    and isinstance(to.piece, Blank):
-                return True
+        if self.is_orthogonal_move(direction, length) \
+                and isinstance(to.piece, Blank):
+            if length.size == 2:
+                self.is_passable = True
+
+            return True
 
         # taking another piece
-        if self.is_diagonal_move(direction, length) and to.piece.color != self.color:
-            if not isinstance(to.piece, Blank):
-                return True
+        if self.is_diagonal_move(direction, length) \
+                and to.piece.color == opponent(self.color):
+            return True
 
         return False
 
@@ -88,7 +102,7 @@ class Knight(Piece):
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
-        if direction in DIAGONAL_DIRECTIONS\
+        if direction in DIAGONAL_DIRECTIONS \
                 and abs(length.dx) + abs(length.dy) == 3 \
                 and to.piece.color != self.color:
             return True
@@ -115,7 +129,7 @@ class Bishop(Piece):
 class Queen(Piece):
     @property
     def symbol(self):
-        return {Color.BLACK:  '♛', Color.WHITE: '♕'}
+        return {Color.BLACK: '♛', Color.WHITE: '♕'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
@@ -131,7 +145,7 @@ class Queen(Piece):
 class King(Piece):
     @property
     def symbol(self):
-        return {Color.BLACK:  '♚', Color.WHITE: '♔'}
+        return {Color.BLACK: '♚', Color.WHITE: '♔'}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
@@ -147,13 +161,14 @@ class King(Piece):
 
 class Blank(Piece):
     """ A placeholder class for tiles unoccupied by pieces"""
+
     def __init__(self):
         self.color = Color.NONE
         super().__init__(self.color)
 
     @property
     def symbol(self):
-        return {Color.NONE:  ''}
+        return {Color.NONE: ''}
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         """ never move a blank field"""
