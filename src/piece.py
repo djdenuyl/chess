@@ -42,7 +42,7 @@ class Pawn(Piece):
     def symbol(self):
         return {Color.BLACK: '♟', Color.WHITE: '♙'}
 
-    def is_diagonal_move(self, direction: Direction, length: Length) -> bool:
+    def is_valid_diagonal_move(self, direction: Direction, length: Length) -> bool:
         if abs(length.dx) == 1 and abs(length.dy) == 1:
             if self.color == Color.BLACK and direction in (Direction.SE, Direction.SW) \
                     or self.color == Color.WHITE and direction in (Direction.NE, Direction.NW):
@@ -50,7 +50,7 @@ class Pawn(Piece):
 
         return False
 
-    def is_orthogonal_move(self, direction: Direction, length: Length) -> bool:
+    def is_valid_orthogonal_move(self, direction: Direction, length: Length) -> bool:
         if length.size == 1 or (length.size == 2 and not self.has_moved):
             if self.color == Color.BLACK and direction == Direction.S \
                     or self.color == Color.WHITE and direction == Direction.N:
@@ -61,15 +61,14 @@ class Pawn(Piece):
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
         # regular move / start move
-        if self.is_orthogonal_move(direction, length) \
+        if self.is_valid_orthogonal_move(direction, length) \
                 and isinstance(to.piece, Blank):
             if length.size == 2:
                 self.is_passable = True
-
             return True
 
         # taking another piece
-        if self.is_diagonal_move(direction, length) \
+        if self.is_valid_diagonal_move(direction, length) \
                 and to.piece.color == opponent(self.color):
             return True
 

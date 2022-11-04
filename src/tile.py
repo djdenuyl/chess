@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from src.piece import Piece, Blank
-from typing import Optional
+from src.piece import Blank, PieceType
+from typing import Optional, Type
 from utils.letters import LETTERS
 
 
@@ -11,7 +11,7 @@ class Tile:
     x_int: int = field(init=False, repr=False)
     name: str = field(init=False)
     color: str = field(init=False)
-    piece: Optional[Piece] = Blank()
+    piece: Optional[Type[PieceType]] = Blank()
 
     def __set_x_int(self):
         self.x_int = LETTERS.index(self.x)

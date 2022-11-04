@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from itertools import chain
-from src.piece import PieceType, Blank, Knight
+from src.piece import PieceType, Blank, Knight, Pawn
 from src.tile import Tile
 from typing import Optional, Type, Iterator
 from utils.color import Color
@@ -94,3 +94,9 @@ class Board:
         """ collect the axis indices vertically between the frm and to tile"""
         drc, lng = get_vector(frm, to)
         return range(frm.y + drc.value[1], to.y, drc.value[1] or 1) or [frm.y] * (abs(lng.dx) - 1)
+
+    def reset_passable_pawns(self, color: Color):
+        pawn_tiles = self.tiles_by_piece_type(Pawn, color)
+        for p in pawn_tiles:
+            if isinstance(p.piece, Pawn):
+                self.tiles[self.height - p.y][p.x_int].piece.is_passable = False

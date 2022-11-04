@@ -96,24 +96,27 @@ class Game:
 
         return False
 
-    def _en_passant(self, frm: Tile, to: Tile) -> bool:
-        """ checks whether the move is eligible for en passant"""
+    def _en_passant(self, frm: Tile, to: Tile) -> Optional[Tile]:
+        """ checks whether the move is eligible for en passant. Return the pawn that is passed if it is en passant"""
         direction, length = get_vector(frm, to)
 
         neighbor_tile = self.board.tiles[self.board.height - frm.y][frm.x_int + direction.value[0]]
 
         if isinstance(frm.piece, Pawn) \
-                and frm.piece.is_diagonal_move(direction, length) \
+                and frm.piece.is_valid_diagonal_move(direction, length) \
                 and isinstance(neighbor_tile.piece, Pawn) \
                 and neighbor_tile.piece.color != frm.piece.color \
                 and neighbor_tile.piece.is_passable:
-            return True
-
-        return False
+            return neighbor_tile
 
     def move(self, frm: Tile, to: Tile):
         """ move a piece"""
-        if (self._is_valid_move(frm, to) or self._en_passant(frm, to)) \
+        # reset pawns of the player whose turn it is to not passable
+        self.board.reset_passable_pawns(self.turn)
+
+        # check if en passant rule applies
+        passable_pawn_tile = self._en_passant(frm, to)
+        if (self._is_valid_move(frm, to) or passable_pawn_tile is not None) \
                 and frm.piece.color == self.turn:
             frm_piece = frm.piece
             to_piece = to.piece
@@ -127,8 +130,13 @@ class Game:
                 self.board.tiles[self.board.height - frm.y][frm.x_int].piece = frm_piece
                 return
 
-            # update that the piece (now at the to tile) has moved
+            # if the move is a valid en passant move, remove the pawn that was passed
+            if passable_pawn_tile is not None:
+                self.board.tiles[self.board.height - passable_pawn_tile.y][passable_pawn_tile.x_int].piece = Blank()
+
+            # update that the piece (now at the 'to' tile) has moved
             self.board.tiles[self.board.height - to.y][to.x_int].piece.has_moved = True
+
             # set the turn to the other player
             self.turn = opponent(self.turn)
 
