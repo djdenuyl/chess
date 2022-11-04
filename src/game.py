@@ -46,19 +46,13 @@ class Game:
 
     def _is_under_thread_by(self, tile) -> Iterator[Tile]:
         """ returns a list of all opponent occupied tiles that can reach the tile within one move"""
-        if isinstance(tile.piece, Blank):
-            return []
-
-        opponent_tiles = self.board.opponent_tiles(tile)
+        opponent_tiles = self.board.opponent_tiles(self.turn)
 
         # if any of the opponents pieces can make a valid move to the piece
         return compress(opponent_tiles, [self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles])
 
     def _is_under_thread(self, tile) -> bool:
         """ check if a tile is reachable by a piece from the opponent within one move"""
-        if isinstance(tile.piece, Blank):
-            return False
-
         # if any of the opponents pieces can make a valid move to the piece
         if any(self._is_under_thread_by(tile)):
             return True
@@ -109,6 +103,32 @@ class Game:
                 and neighbor_tile.piece.is_passable:
             return neighbor_tile
 
+    def _castle(self, frm: Tile, to: Tile) -> bool:
+        """ checks whether the move is eligible for castling."""
+        if (isinstance(frm.piece, King) or isinstance(to.piece, King)) \
+                and (isinstance(frm.piece, Rook) or isinstance(to.piece, Rook)) \
+                and frm.piece.color == to.piece.color \
+                and not frm.piece.has_moved \
+                and not to.piece.has_moved \
+                and self._has_clear_path(frm, to) \
+                and not any(self._is_under_thread(tile) for tile in self.board.tiles_between(frm, to)) \
+                and not self.check():
+            return True
+
+        return False
+
+    def _resolve_castle(self, frm: Tile, to: Tile):
+        """ take all actions needed to accomplish a castling move, i.e. moving and updating the King and Rook"""
+        [k_tile] = self.board.tiles_by_piece_type(King, self.turn)
+        [r_tile] = [r for r in self.board.tiles_by_piece_type(Rook, self.turn) if r in (frm, to)]
+        kx = k_tile.x_int + 2 if r_tile.x == 'H' else k_tile.x_int - 2
+        rx = kx - 1 if r_tile.x == 'H' else kx + 1
+        self.board.tiles[self.board.height - k_tile.y][kx].piece = k_tile.piece
+        self.board.tiles[self.board.height - k_tile.y][kx].piece.has_moved = True
+        self.board.tiles[self.board.height - r_tile.y][rx].piece = r_tile.piece
+        self.board.tiles[self.board.height - r_tile.y][rx].piece.has_moved = True
+        self.board.tiles[self.board.height - to.y][to.x_int].piece = Blank()
+
     def move(self, frm: Tile, to: Tile):
         """ move a piece"""
         # reset pawns of the player whose turn it is to not passable
@@ -116,12 +136,24 @@ class Game:
 
         # check if en passant rule applies
         passable_pawn_tile = self._en_passant(frm, to)
-        if (self._is_valid_move(frm, to) or passable_pawn_tile is not None) \
+
+        # check move conditions
+        if (self._is_valid_move(frm, to) or passable_pawn_tile is not None or self._castle(frm, to)) \
                 and frm.piece.color == self.turn:
             frm_piece = frm.piece
             to_piece = to.piece
 
-            self.board.tiles[self.board.height - to.y][to.x_int].piece = frm_piece
+            # update the tiles
+            if self._castle(frm, to):
+                self._resolve_castle(frm, to)
+            else:
+                # update the 'to' tile in case of a regular turn
+                self.board.tiles[self.board.height - to.y][to.x_int].piece = frm_piece
+
+                # update that the piece (now at the 'to' tile) has moved
+                self.board.tiles[self.board.height - to.y][to.x_int].piece.has_moved = True
+
+            # the frm tile is always left empty
             self.board.tiles[self.board.height - frm.y][frm.x_int].piece = Blank()
 
             # if the move results in a check state, revert the move
@@ -130,12 +162,9 @@ class Game:
                 self.board.tiles[self.board.height - frm.y][frm.x_int].piece = frm_piece
                 return
 
-            # if the move is a valid en passant move, remove the pawn that was passed
+            # if the move is a valid en-passant move, remove the pawn that was passed
             if passable_pawn_tile is not None:
                 self.board.tiles[self.board.height - passable_pawn_tile.y][passable_pawn_tile.x_int].piece = Blank()
-
-            # update that the piece (now at the 'to' tile) has moved
-            self.board.tiles[self.board.height - to.y][to.x_int].piece.has_moved = True
 
             # set the turn to the other player
             self.turn = opponent(self.turn)

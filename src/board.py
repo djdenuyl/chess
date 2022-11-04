@@ -3,7 +3,7 @@ from itertools import chain
 from src.piece import PieceType, Blank, Knight, Pawn
 from src.tile import Tile
 from typing import Optional, Type, Iterator
-from utils.color import Color
+from utils.color import Color, opponent
 from utils.letters import LETTERS
 from utils.vector import get_vector
 
@@ -65,10 +65,10 @@ class Board:
 
         return surrounding_tiles
 
-    def opponent_tiles(self, tile: Tile) -> list[Tile]:
-        """ return all the tiles occupied by the opponent of the piece at the given tile. """
+    def opponent_tiles(self, color: Color) -> list[Tile]:
+        """ return all the tiles occupied by the opponent of the given color. """
         return [
-            t for t in self.flat if t.piece.color != tile.piece.color and not isinstance(t.piece, Blank)
+            t for t in self.flat if t.piece.color == opponent(color) and not isinstance(t.piece, Blank)
         ]
 
     def tiles_between(self, frm: Tile, to: Tile) -> list[Tile]:
@@ -96,6 +96,7 @@ class Board:
         return range(frm.y + drc.value[1], to.y, drc.value[1] or 1) or [frm.y] * (abs(lng.dx) - 1)
 
     def reset_passable_pawns(self, color: Color):
+        """ resets the is_passable attr to False for all pawns of Color 'color'"""
         pawn_tiles = self.tiles_by_piece_type(Pawn, color)
         for p in pawn_tiles:
             if isinstance(p.piece, Pawn):
