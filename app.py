@@ -160,7 +160,7 @@ class App:
             # check if a promotion event is ongoing
             promotion_tile = self.game.which_pawn_promotable()
 
-            if ctx.triggered_id is None:
+            if ctx.triggered_id is None or self.game.state() == GameState.CHECKMATE:
                 raise PreventUpdate
             # if clicked on a tile
             elif ctx.triggered_id.get('type') == 'tile':
@@ -227,6 +227,8 @@ class App:
                 clss.append('move')
             if self.game.check():
                 clss.append('check')
+            if self.game.checkmate():
+                clss.append('checkmate')
 
             return ' '.join(clss)
 

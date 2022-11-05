@@ -58,6 +58,10 @@ body, html {
     background: var(--red);
 }
 
+.checkmate {
+    background: var(--black);
+}
+
 .promotion-tile {
     display: grid;
     grid-template: repeat(2, calc(.5 * var(--size))) / repeat(2, calc(.5 * var(--size)));

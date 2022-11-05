@@ -44,14 +44,14 @@ class Game:
 
         return True
 
-    def _is_under_thread_by(self, tile) -> Iterator[Tile]:
+    def _is_under_thread_by(self, tile: Tile) -> Iterator[Tile]:
         """ returns a list of all opponent occupied tiles that can reach the tile within one move"""
         opponent_tiles = self.board.opponent_tiles(self.turn)
 
         # if any of the opponents pieces can make a valid move to the piece
         return compress(opponent_tiles, [self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles])
 
-    def _is_under_thread(self, tile) -> bool:
+    def _is_under_threat(self, tile: Tile) -> bool:
         """ check if a tile is reachable by a piece from the opponent within one move"""
         # if any of the opponents pieces can make a valid move to the piece
         if any(self._is_under_thread_by(tile)):
@@ -64,7 +64,19 @@ class Game:
         [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
         surrounding_tiles = self.board.surrounding_tiles(king_tile)
 
-        return all([not self._is_valid_move(king_tile, s) or self._is_under_thread(s) for s in surrounding_tiles])
+        # TODO: There is still a bug here, where the game thinks the king is not under threat on a tile
+        # TODO: currently blocked by the king itself, because the piece threatening the king doesnt have a clear
+        # TODO: path. for example   this tile is currently not under threat -> [ ] [K] [<-] [<-] [R]
+        print([s.name for s in surrounding_tiles])
+        print([self._is_valid_move(king_tile, s) for s in surrounding_tiles])
+        print([not self._is_under_threat(Tile(s.x, s.y)) for s in surrounding_tiles])
+        print([self._is_valid_move(king_tile, s) and not self._is_under_threat(Tile(s.x, s.y)) for s in surrounding_tiles])
+        # king can be moved if there is any move that is valid and not under threat, return negation of that
+        # NB. We are considering the tile to be under threat if a piece can be moved there if it was not occupied
+        # by a piece of its own color
+        return not any(
+            [self._is_valid_move(king_tile, s) and not self._is_under_threat(Tile(s.x, s.y)) for s in surrounding_tiles]
+        )
 
     def _can_move_piece_between_king(self) -> bool:
         """ checks if any piece can be moved between the king and any piece threatening the king
@@ -85,7 +97,7 @@ class Game:
         """ checks if any piece can take the piece threatening the king"""
         [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
         threatening_tiles = self._is_under_thread_by(king_tile)
-        if any([self._is_under_thread(tt) for tt in threatening_tiles]):
+        if any([self._is_under_threat(tt) for tt in threatening_tiles]):
             return True
 
         return False
@@ -111,7 +123,7 @@ class Game:
                 and not frm.piece.has_moved \
                 and not to.piece.has_moved \
                 and self._has_clear_path(frm, to) \
-                and not any(self._is_under_thread(tile) for tile in self.board.tiles_between(frm, to)) \
+                and not any(self._is_under_threat(tile) for tile in self.board.tiles_between(frm, to)) \
                 and not self.check():
             return True
 
@@ -147,10 +159,8 @@ class Game:
             if self._castle(frm, to):
                 self._resolve_castle(frm, to)
             else:
-                # update the 'to' tile in case of a regular turn
+                # update the 'to' tile in case of a regular turn and that the piece (now at the 'to' tile) has moved
                 self.board.tiles[self.board.height - to.y][to.x_int].piece = frm_piece
-
-                # update that the piece (now at the 'to' tile) has moved
                 self.board.tiles[self.board.height - to.y][to.x_int].piece.has_moved = True
 
             # the frm tile is always left empty
@@ -173,7 +183,7 @@ class Game:
         """ checks for the player who's turn it is whether its king is in check"""
         [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
 
-        return self._is_under_thread(king_tile)
+        return self._is_under_threat(king_tile)
 
     def checkmate(self) -> bool:
         """ checks for the player who's turn it is whether its checkmate"""
@@ -181,6 +191,11 @@ class Game:
         # 2) all tiles around the king are either an invalid move for the king or result in a check
         # 3) and no piece can be put in between the king and the piece that has the king in check
         # 4) no piece can take the piece that has the king in check
+        print(self.check())
+        print(self._cant_move_king())
+        print(not self._can_move_piece_between_king())
+        print(not self._can_take_piece_threatening_king())
+
         if self.check() \
                 and self._cant_move_king() \
                 and not self._can_move_piece_between_king() \
