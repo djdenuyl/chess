@@ -1,6 +1,9 @@
 """
-Created on 2022-10-19
-@author: David den Uyl (djdenuyl@gmail.com)
+Contains all the game logic, such as making a move, the castling, en-passant and promotion rules
+and check and checkmate checking.
+
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-19
 """
 from itertools import compress
 from src.piece import Blank, King, PieceType, Pawn, Queen, Bishop, Knight, Rook
@@ -44,17 +47,29 @@ class Game:
 
         return True
 
-    def _is_under_thread_by(self, tile: Tile) -> Iterator[Tile]:
-        """ returns a list of all opponent occupied tiles that can reach the tile within one move"""
+    def _is_under_thread_by(self, tile: Tile, if_not_for_tile: Optional[Tile] = None) -> Iterator[Tile]:
+        """ returns a list of all opponent occupied tiles that can reach the tile within one move. Optionally,
+        provide a 'if_not_for' Tile, which will be removed during the identification of valid moves,
+        then placed back. Thereby making the check to see if the tile would be under threat if the 'if_not_for_tile'
+        wasn't present"""
         opponent_tiles = self.board.opponent_tiles(self.turn)
 
-        # if any of the opponents pieces can make a valid move to the piece
-        return compress(opponent_tiles, [self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles])
+        if if_not_for_tile is None:
+            valid_moves = [self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles]
+        else:
+            h_piece = if_not_for_tile.piece
+            self.board.tiles[self.board.height - if_not_for_tile.y][if_not_for_tile.x_int].piece = Blank()
+            valid_moves = [self._is_valid_move(opponent_tile, tile) for opponent_tile in opponent_tiles]
+            self.board.tiles[self.board.height - if_not_for_tile.y][if_not_for_tile.x_int].piece = h_piece
 
-    def _is_under_threat(self, tile: Tile) -> bool:
-        """ check if a tile is reachable by a piece from the opponent within one move"""
         # if any of the opponents pieces can make a valid move to the piece
-        if any(self._is_under_thread_by(tile)):
+        return compress(opponent_tiles, valid_moves)
+
+    def _is_under_threat(self, tile: Tile, if_not_for_tile: Optional[Tile] = None) -> bool:
+        """ check if a tile is reachable by a piece from the opponent within one move. See _is_under_thread_by()
+        for an explanation of the 'is_not_for_tile' parameter"""
+        # if any of the opponents pieces can make a valid move to the piece
+        if any(self._is_under_thread_by(tile, if_not_for_tile)):
             return True
 
         return False
@@ -64,18 +79,15 @@ class Game:
         [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
         surrounding_tiles = self.board.surrounding_tiles(king_tile)
 
-        # TODO: There is still a bug here, where the game thinks the king is not under threat on a tile
-        # TODO: currently blocked by the king itself, because the piece threatening the king doesnt have a clear
-        # TODO: path. for example   this tile is currently not under threat -> [ ] [K] [<-] [<-] [R]
-        print([s.name for s in surrounding_tiles])
-        print([self._is_valid_move(king_tile, s) for s in surrounding_tiles])
-        print([not self._is_under_threat(Tile(s.x, s.y)) for s in surrounding_tiles])
-        print([self._is_valid_move(king_tile, s) and not self._is_under_threat(Tile(s.x, s.y)) for s in surrounding_tiles])
-        # king can be moved if there is any move that is valid and not under threat, return negation of that
-        # NB. We are considering the tile to be under threat if a piece can be moved there if it was not occupied
-        # by a piece of its own color
+        # king can be moved if there is any move that is valid and not under threat, return negation of that.
+        # NB. A tile is considered to be under threat if an opposing piece can be moved there if it was occupied
+        # by a piece (here the King) of the players color. Moreover, the if_not_for argument is used to move the
+        # king temporarily for the checking of whether the tile is under threat --
+        # effectively the king is moved temporarily.
         return not any(
-            [self._is_valid_move(king_tile, s) and not self._is_under_threat(Tile(s.x, s.y)) for s in surrounding_tiles]
+            [self._is_valid_move(king_tile, s)
+             and not self._is_under_threat(Tile(s.x, s.y, king_tile.piece), if_not_for_tile=king_tile)
+             for s in surrounding_tiles]
         )
 
     def _can_move_piece_between_king(self) -> bool:

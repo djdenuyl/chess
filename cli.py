@@ -1,7 +1,10 @@
 """
-Created on %(date)s
+A Command line interface for the Chess game
 
-@author: David den Uyl (ddenuyl@bebr.nl)
+# TODO: Work in progress
+
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-19
 """
 from src.game import Game
 

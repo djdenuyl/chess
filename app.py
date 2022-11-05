@@ -1,6 +1,8 @@
 """
-Created on 2022-10-22
-@author: David den Uyl (djdenuyl@gmail.com)
+The Dash application / UI for the game
+
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-22
 """
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate

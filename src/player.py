@@ -1,7 +1,6 @@
 """
-Created on %(date)s
-
-@author: David den Uyl (ddenuyl@bebr.nl)
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-19
 """
 from dataclasses import dataclass
 from typing import Type

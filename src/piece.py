@@ -1,6 +1,6 @@
 """
-Created on 2022-10-19
-@author: David den Uyl (djdenuyl@gmail.com)
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-19
 """
 from abc import ABC, abstractmethod
 from typing import TypeVar

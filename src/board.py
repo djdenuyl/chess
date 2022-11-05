@@ -1,3 +1,7 @@
+"""
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-19
+"""
 from dataclasses import dataclass, field
 from itertools import chain
 from src.piece import PieceType, Blank, Knight, Pawn

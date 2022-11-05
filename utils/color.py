@@ -1,7 +1,12 @@
+"""
+author: David den Uyl (djdenuyl@gmail.com)
+date: 2022-10-19
+"""
 from enum import Enum, auto
 
 
 class Color(Enum):
+    """ represents the options for the player color"""
     BLACK = auto()
     WHITE = auto()
     NONE = auto()

@@ -2,5 +2,5 @@ name: chess
 channels:
   - conda-forge
 dependencies:
-  - python
-  - dash
+  - python=3.10
+  - dash=2.6
