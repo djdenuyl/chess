@@ -4,3 +4,4 @@ channels:
 dependencies:
   - python=3.10
   - dash=2.6
+  - dash-bootstrap-components=1.2

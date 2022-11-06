@@ -3,6 +3,11 @@ author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-19
 */
 
+#test {
+    font-size: 5rem;
+    color: white;
+}
+
 :root {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
@@ -30,6 +35,22 @@ body, html {
     display: grid;
     place-items: center;
     height: 100vh;
+}
+
+#new {
+    grid-area: 1 / 1 / 1 / 1;
+    height: calc(.5 * var(--size));
+    width: calc(.5 * var(--size));
+    margin-bottom: calc(10 * var(--size));
+    background: var(--teal);
+    color: var(--blue);
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 50%;
+    font-size: calc(.4 * var(--size));
+    cursor: pointer;
+    line-height: 0;
 }
 
 #indicator {
@@ -130,7 +151,7 @@ body, html {
     place-items: center;
 }
 
-#chessboard, #promotion {
+#chessboard, #promotion, #help {
     display: grid;
     grid-area: 1 / 1 / 1 / 1;
     grid-template: repeat(8, var(--size)) / repeat(8, var(--size));

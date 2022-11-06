@@ -7,6 +7,8 @@ date: 2022-10-22
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
+from dash_bootstrap_components import Popover
+
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
@@ -31,16 +33,13 @@ class App:
         return Div(
             id='app-container',
             children=[
+                Button(id='new', children='↺'),
                 Div(id='indicator', children=Div(id='signal', className='signal')),
                 Div(id='promotion'),
-                Div(
-                    id='border',
-                    children=self.init_labels()
-                ),
-                Div(
-                    id='chessboard',
-                    children=self.init_board()
-                )
+                Div(id='help', children=self.init_help()),
+                Div(id='border', children=self.init_labels()),
+                Div(id='chessboard', children=self.init_board()),
+                Div(id='test', children='hallo')
             ]
         )
 
@@ -68,6 +67,27 @@ class App:
                 )
 
         return buttons
+
+    def init_help(self) -> list[Popover]:
+        """ initiate the help tiles. They are invisible, """
+        popovers = []
+        for row in self.game.board.tiles:
+            for tile in row:
+                popovers.append(
+                    Popover(
+                        id={
+                            'type': 'popover',
+                            'index': tile.name
+                        },
+                        target={
+                            'type': 'tile',
+                            'index': tile.name
+                        },
+                        trigger='hover',
+                    )
+                )
+
+        return popovers
 
     def init_promotion_tile(self, tile) -> Div:
         """ create a promotion tile, where a player can select which piece to promote a pawn to"""
@@ -221,9 +241,10 @@ class App:
 
         @self.dash.callback(
             Output('signal', 'className'),
-            Input('chessboard', 'children')
+            Input('chessboard', 'children'),
+            Input('new', 'n_clicks')
         )
-        def update_indicator(_):
+        def update_indicator(*_):
             clss = ['signal']
             if self.game.turn == Color.BLACK:
                 clss.append('move')
@@ -233,6 +254,41 @@ class App:
                 clss.append('checkmate')
 
             return ' '.join(clss)
+
+        @self.dash.callback(
+            Output('app-container', 'children'),
+            Input('new', 'n_clicks'),
+            State('app-container', 'children'),
+            prevent_initial_callback=True
+        )
+        def restart(_, app_elements):
+            if ctx is None:
+                raise PreventUpdate
+
+            # init a new game
+            self.game = Game()
+            [chessboard_idx] = [app_elements.index(i) for i in app_elements if i['props']['id'] == 'chessboard']
+            app_elements[chessboard_idx]['props']['children'] = [b.to_plotly_json() for b in self.init_board()]
+
+            return app_elements
+
+        @self.dash.callback(
+            Output('test', 'children'),
+            Input({'type': 'popover', 'index': ALL}, 'is_open')
+        )
+        def show_help(_):
+            if ctx.triggered_id is None:
+                raise PreventUpdate
+
+            triggered_tile_name = ctx.triggered_id.get('index')
+
+            print(triggered_tile_name)
+            t = list(self.game._is_under_thread_by(self.game.board.tile_by_name(triggered_tile_name)))
+
+            if t:
+                return 'threatened by:' + ','.join([str(z.piece) for z in t])
+            else:
+                return ' '
 
 
 if __name__ == '__main__':

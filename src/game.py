@@ -203,11 +203,6 @@ class Game:
         # 2) all tiles around the king are either an invalid move for the king or result in a check
         # 3) and no piece can be put in between the king and the piece that has the king in check
         # 4) no piece can take the piece that has the king in check
-        print(self.check())
-        print(self._cant_move_king())
-        print(not self._can_move_piece_between_king())
-        print(not self._can_take_piece_threatening_king())
-
         if self.check() \
                 and self._cant_move_king() \
                 and not self._can_move_piece_between_king() \
