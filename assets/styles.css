@@ -2,12 +2,6 @@
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-19
 */
-
-#test {
-    font-size: 5rem;
-    color: white;
-}
-
 :root {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
@@ -37,20 +31,40 @@ body, html {
     height: 100vh;
 }
 
-#new {
+#menu {
     grid-area: 1 / 1 / 1 / 1;
     height: calc(.5 * var(--size));
-    width: calc(.5 * var(--size));
+    width: calc(6.5 * var(--size));
     margin-bottom: calc(10 * var(--size));
-    background: var(--teal);
+    display: flex;
+    justify-content: center;
+    gap: var(--size);
+}
+
+.menu-item {
+    height: 100%;
+    aspect-ratio: 1;
     color: var(--blue);
-    display: grid;
-    place-items: center;
     border: none;
     border-radius: 50%;
     font-size: calc(.4 * var(--size));
     cursor: pointer;
-    line-height: 0;
+}
+
+.menu-item:active {
+    filter: brightness(75%);
+}
+
+.new {
+    background: var(--teal);
+}
+
+.help {
+    background: var(--orange);
+}
+
+.on {
+    background: var(--teal);
 }
 
 #indicator {
@@ -151,7 +165,7 @@ body, html {
     place-items: center;
 }
 
-#chessboard, #promotion, #help {
+#chessboard, #promotion {
     display: grid;
     grid-area: 1 / 1 / 1 / 1;
     grid-template: repeat(8, var(--size)) / repeat(8, var(--size));
@@ -184,4 +198,27 @@ button {
 
 @keyframes throb {
     50% {font-size: calc(var(--size) * 0.75);}
+}
+
+.valid-move {
+    background: var(--yellow);
+    box-shadow: 0 0 1px var(--blue);
+}
+
+.abc {
+    background: var(--red);
+    position: relative;
+    animation: bth 2s infinite;
+}
+
+@keyframes bth {
+    50% {background: var(--teal);}
+}
+
+.threatened {
+    background: var(--red);
+}
+
+.threatening {
+    background: var(--teal);
 }
