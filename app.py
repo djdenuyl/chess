@@ -4,9 +4,11 @@ The Dash application / UI for the game
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
+from pathlib import Path
+
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
-from dash.html import Div, Button
+from dash.html import Div, Button, Img
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
@@ -27,18 +29,19 @@ class App:
         self.dash.layout = self.layout
         self.callbacks()
 
+    def icon_path(self, *args: str) -> str:
+        base = Path(self.dash.get_asset_url('icons'))
+        for arg in args:
+            base /= arg
+
+        return base.as_posix()
+
     @property
-    def layout(self):
+    def layout(self) -> Div:
         return Div(
             id='app-container',
             children=[
-                Div(
-                    id='menu',
-                    children=[
-                        Button(id='new', className='new menu-item', children='↺'),
-                        Button(id='help', className='help menu-item', children='ℹ')
-                    ]
-                ),
+                Div(id='menu', children=self.init_menu_items()),
                 Div(id='indicator', children=Div(id='signal', className='signal')),
                 Div(id='promotion'),
                 Div(id='border', children=self.init_labels()),
@@ -49,6 +52,14 @@ class App:
     def play(self, **kwargs):
         """ play the game """
         self.dash.run(**kwargs)
+
+    def init_menu_items(self) -> list[Button]:
+        """ create the menu items """
+        return [
+            Button(id='new', className='new menu-item', children=Img(src=self.icon_path('menu', 'new.svg'))),
+            Button(id='help', className='help menu-item', children=Img(src=self.icon_path('menu', 'help.svg'))),
+            Button(id='timer', className='timer menu-item', children=Img(src=self.icon_path('menu', 'timer.svg')))
+        ]
 
     def init_board(self) -> list[Button]:
         """ initiate the game board. update the original classes of each tile"""
@@ -138,11 +149,8 @@ class App:
                 ]
 
                 for t in set(threatened_tiles + threatening_tiles):
-                    print(list(threatened_tiles))
-                    print(list(threatening_tiles))
-                    print(set(list(threatened_tiles) + list(threatening_tiles)))
                     if t in threatened_tiles and t in threatening_tiles:
-                        self.update_effects(t, add=['abc'])
+                        self.update_effects(t, add=['thrthr'])
                     elif t in threatened_tiles:
                         self.update_effects(t, add=['threatened'])
                     else:
@@ -288,7 +296,7 @@ class App:
             prevent_initial_callback=True
         )
         def toggle_help(_):
-            if ctx is None:
+            if ctx.triggered_id is None:
                 raise PreventUpdate
 
             # toggle help attr
