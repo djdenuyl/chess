@@ -47,7 +47,23 @@ class Game:
 
         return True
 
-    def _is_under_thread_by(self, tile: Tile, if_not_for_tile: Optional[Tile] = None) -> Iterator[Tile]:
+    def valid_moves(self, tile: Tile) -> Iterator[Tile]:
+        """ returns a list of all tiles that the piece occupying the tile can reach within one move """
+        valid_moves = [self._is_valid_move(tile, board_tile) for board_tile in self.board.flat]
+
+        # the opponents to which the piece can make a valid move
+        return compress(self.board.flat, valid_moves)
+
+    def is_threatening(self, tile: Tile) -> Iterator[Tile]:
+        """ returns a list of all opponent occupied tiles that the tile can reach within one move """
+        opponent_tiles = self.board.opponent_tiles(self.turn)
+
+        valid_moves = [self._is_valid_move(tile, opponent_tile) for opponent_tile in opponent_tiles]
+
+        # the opponents to which the piece can make a valid move
+        return compress(opponent_tiles, valid_moves)
+
+    def is_under_thread_by(self, tile: Tile, if_not_for_tile: Optional[Tile] = None) -> Iterator[Tile]:
         """ returns a list of all opponent occupied tiles that can reach the tile within one move. Optionally,
         provide a 'if_not_for' Tile, which will be removed during the identification of valid moves,
         then placed back. Thereby making the check to see if the tile would be under threat if the 'if_not_for_tile'
@@ -69,7 +85,7 @@ class Game:
         """ check if a tile is reachable by a piece from the opponent within one move. See _is_under_thread_by()
         for an explanation of the 'is_not_for_tile' parameter"""
         # if any of the opponents pieces can make a valid move to the piece
-        if any(self._is_under_thread_by(tile, if_not_for_tile)):
+        if any(self.is_under_thread_by(tile, if_not_for_tile)):
             return True
 
         return False
@@ -94,7 +110,7 @@ class Game:
         """ checks if any piece can be moved between the king and any piece threatening the king
         TODO: does this also work for double checks?"""
         [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
-        threatening_tiles = self._is_under_thread_by(king_tile)
+        threatening_tiles = self.is_under_thread_by(king_tile)
         own_tiles = self.board.tiles_by_color(self.turn)
 
         for threatening_tile in threatening_tiles:
@@ -108,7 +124,7 @@ class Game:
     def _can_take_piece_threatening_king(self) -> bool:
         """ checks if any piece can take the piece threatening the king"""
         [king_tile] = self.board.tiles_by_piece_type(King, self.turn)
-        threatening_tiles = self._is_under_thread_by(king_tile)
+        threatening_tiles = self.is_under_thread_by(king_tile)
         if any([self._is_under_threat(tt) for tt in threatening_tiles]):
             return True
 
@@ -198,16 +214,13 @@ class Game:
         return self._is_under_threat(king_tile)
 
     def checkmate(self) -> bool:
-        """ checks for the player who's turn it is whether its checkmate"""
+        """ checks for the player who's turn it is whether its checkmate
+        TODO: checkmate found when pawn could be moved between piece (Qw) and king (Kb)
+        """
         # 1) the king is in check
         # 2) all tiles around the king are either an invalid move for the king or result in a check
         # 3) and no piece can be put in between the king and the piece that has the king in check
         # 4) no piece can take the piece that has the king in check
-        print(self.check())
-        print(self._cant_move_king())
-        print(not self._can_move_piece_between_king())
-        print(not self._can_take_piece_threatening_king())
-
         if self.check() \
                 and self._cant_move_king() \
                 and not self._can_move_piece_between_king() \

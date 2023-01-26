@@ -4,9 +4,11 @@ The Dash application / UI for the game
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
+from pathlib import Path
+
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
-from dash.html import Div, Button
+from dash.html import Div, Button, Img
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
@@ -22,31 +24,42 @@ class App:
         self.original_classes = []
         self.tiles = None
         self.selected_tile_name = None
+        self.help = False
 
         self.dash.layout = self.layout
         self.callbacks()
 
+    def icon_path(self, *args: str) -> str:
+        base = Path(self.dash.get_asset_url('icons'))
+        for arg in args:
+            base /= arg
+
+        return base.as_posix()
+
     @property
-    def layout(self):
+    def layout(self) -> Div:
         return Div(
             id='app-container',
             children=[
+                Div(id='menu', children=self.init_menu_items()),
                 Div(id='indicator', children=Div(id='signal', className='signal')),
                 Div(id='promotion'),
-                Div(
-                    id='border',
-                    children=self.init_labels()
-                ),
-                Div(
-                    id='chessboard',
-                    children=self.init_board()
-                )
+                Div(id='border', children=self.init_labels()),
+                Div(id='chessboard', children=self.init_board()),
             ]
         )
 
     def play(self, **kwargs):
         """ play the game """
         self.dash.run(**kwargs)
+
+    def init_menu_items(self) -> list[Button]:
+        """ create the menu items """
+        return [
+            Button(id='new', className='new menu-item', children=Img(src=self.icon_path('menu', 'new.svg'))),
+            Button(id='help', className='help menu-item', children=Img(src=self.icon_path('menu', 'help.svg'))),
+            Button(id='timer', className='timer menu-item', children=Img(src=self.icon_path('menu', 'timer.svg')))
+        ]
 
     def init_board(self) -> list[Button]:
         """ initiate the game board. update the original classes of each tile"""
@@ -120,16 +133,38 @@ class App:
         self.update_placement()
         self.reset_effects()
 
+        # if there is a tile selected
         if self.selected_tile_name is not None:
             self.update_effects(self.selected_tile_name, add=['selected'])
+            if self.help:
+                # id the valid moves
+                for t in self.game.valid_moves(self.game.board.tile_by_name(self.selected_tile_name)):
+                    self.update_effects(t.name, add=['valid-move'])
+
+                threatened_tiles = [
+                    t.name for t in self.game.is_under_thread_by(self.game.board.tile_by_name(self.selected_tile_name))
+                ]
+                threatening_tiles = [
+                    t.name for t in self.game.is_threatening(self.game.board.tile_by_name(self.selected_tile_name))
+                ]
+
+                for t in set(threatened_tiles + threatening_tiles):
+                    if t in threatened_tiles and t in threatening_tiles:
+                        self.update_effects(t, add=['thrthr'])
+                    elif t in threatened_tiles:
+                        self.update_effects(t, add=['threatened'])
+                    else:
+                        self.update_effects(t, add=['threatening'])
 
         return self.tiles
 
     def update_selection(self, triggered_tile_name):
         """ update the selection state depending on which index was triggered. """
+        # if nothing was selected and the player clicked on a piece of its own color, select it
         if self.selected_tile_name is None \
                 and self.game.board.tile_by_name(triggered_tile_name).piece.color == self.game.turn:
             self.selected_tile_name = triggered_tile_name
+        # if the click was on the currently already selected tile, deselect it
         elif triggered_tile_name == self.selected_tile_name:
             self.selected_tile_name = None
         elif triggered_tile_name != self.selected_tile_name and self.selected_tile_name is not None:
@@ -164,6 +199,7 @@ class App:
 
             if ctx.triggered_id is None or self.game.state() == GameState.CHECKMATE:
                 raise PreventUpdate
+
             # if clicked on a tile
             elif ctx.triggered_id.get('type') == 'tile':
                 # defer clicks on tiles when a promotion event is ongoing
@@ -184,7 +220,9 @@ class App:
                             self.game.board.tile_by_name(triggered_tile_name)
                         )
 
+                        # check the game state after the move
                         game_state = self.game.state()
+
                         # deselect after move attempt
                         self.selected_tile_name = None
                     else:
@@ -221,9 +259,10 @@ class App:
 
         @self.dash.callback(
             Output('signal', 'className'),
-            Input('chessboard', 'children')
+            Input('chessboard', 'children'),
+            Input('new', 'n_clicks')
         )
-        def update_indicator(_):
+        def update_indicator(*_):
             clss = ['signal']
             if self.game.turn == Color.BLACK:
                 clss.append('move')
@@ -233,6 +272,40 @@ class App:
                 clss.append('checkmate')
 
             return ' '.join(clss)
+
+        @self.dash.callback(
+            Output('app-container', 'children'),
+            Input('new', 'n_clicks'),
+            State('app-container', 'children'),
+            prevent_initial_callback=True
+        )
+        def restart(_, app_elements):
+            if ctx is None:
+                raise PreventUpdate
+
+            # init a new game
+            self.game = Game()
+            [chessboard_idx] = [app_elements.index(i) for i in app_elements if i['props']['id'] == 'chessboard']
+            app_elements[chessboard_idx]['props']['children'] = [b.to_plotly_json() for b in self.init_board()]
+
+            return app_elements
+
+        @self.dash.callback(
+            Output('help', 'className'),
+            Input('help', 'n_clicks'),
+            prevent_initial_callback=True
+        )
+        def toggle_help(_):
+            if ctx.triggered_id is None:
+                raise PreventUpdate
+
+            # toggle help attr
+            if self.help:
+                self.help = False
+                return 'help menu-item'
+
+            self.help = True
+            return 'help menu-item on'
 
 
 if __name__ == '__main__':

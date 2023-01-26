@@ -35,6 +35,9 @@ class Tile:
         self.__set_name()
         self.__set_color()
 
+    def __hash__(self):
+        return hash((self.name, self.color, self.piece))
+
 
 def tiles(names: list) -> list[Tile]:
     """ return a list of tiles given a list of tile names """

@@ -2,7 +2,6 @@
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-19
 */
-
 :root {
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap');
@@ -30,6 +29,57 @@ body, html {
     display: grid;
     place-items: center;
     height: 100vh;
+}
+
+#menu {
+    grid-area: 1 / 1 / 1 / 1;
+    height: calc(.5 * var(--size));
+    width: calc(6.5 * var(--size));
+    margin-bottom: calc(10 * var(--size));
+    display: flex;
+    justify-content: center;
+    gap: var(--size);
+}
+
+.menu-item {
+    height: 100%;
+    aspect-ratio: 1;
+    color: var(--blue);
+    border: none;
+    border-radius: 50%;
+    font-size: calc(.4 * var(--size));
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+}
+
+.menu-item:active {
+    filter: brightness(75%);
+}
+
+.menu-item > img {
+    height: 60%;
+    aspect-ratio: 1;
+    filter: sepia(1);
+}
+
+.new {
+    background: var(--teal);
+    line-height: 0.3;
+}
+
+.help {
+    background: var(--orange);
+}
+
+.timer {
+    background: var(--orange);
+    font-size: calc(.3 * var(--size));
+}
+
+
+.on {
+    background: var(--teal);
 }
 
 #indicator {
@@ -150,11 +200,11 @@ button {
 
 
 .⬜ {
-    background: var(--white-tile);
+    background-image: linear-gradient(0deg, var(--white-tile), var(--white-tile));
 }
 
 .⬛ {
-    background: var(--black-tile);
+    background-image: linear-gradient(0deg, var(--black-tile), var(--black-tile));
 }
 
 .selected {
@@ -163,4 +213,32 @@ button {
 
 @keyframes throb {
     50% {font-size: calc(var(--size) * 0.75);}
+}
+
+.valid-move {
+    background-blend-mode: multiply;
+    background-color: var(--yellow);
+}
+
+.thrthr {
+    background-blend-mode: multiply;
+    background-color: var(--red);
+    position: relative;
+    animation: bth 2s infinite;
+}
+
+@keyframes bth {
+    50% {
+        background-color: var(--teal);
+    }
+}
+
+.threatened {
+    background-blend-mode: multiply;
+    background-color: var(--red);
+}
+
+.threatening {
+    background-blend-mode: multiply;
+    background-color: var(--teal);
 }
