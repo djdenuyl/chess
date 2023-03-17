@@ -7,6 +7,7 @@ date: 2022-10-22
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button, Img
+from flask import Flask
 from pathlib import Path
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
@@ -18,7 +19,7 @@ from utils.letters import LETTERS
 
 class App:
     def __init__(self):
-        self.dash = Dash()
+        self.dash = Dash(server=Flask(__name__))
         self.game: Game = Game()
         self.original_classes = []
         self.tiles = None

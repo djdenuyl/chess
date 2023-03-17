@@ -7,7 +7,7 @@ from app import App
 from os import environ
 
 
-app = App().dash
+app = App().dash.server
 
 
 if __name__ == '__main__':
