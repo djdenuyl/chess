@@ -4,11 +4,10 @@ The Dash application / UI for the game
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
-from pathlib import Path
-
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button, Img
+from pathlib import Path
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState

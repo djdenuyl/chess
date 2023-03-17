@@ -4,3 +4,5 @@ channels:
 dependencies:
   - python=3.10
   - dash=2.6
+  - gunicorn==20.1.0
+
