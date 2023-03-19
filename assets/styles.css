@@ -14,9 +14,27 @@ date: 2022-10-19
 	--orange: #F4A261;
     --red: #E76F51;
 
-    --size: 5rem;
+    --size: 5vw;
     --white-tile: var(--white);
     --black-tile: var(--orange);
+}
+
+@media (min-aspect-ratio: 1300/750) {
+    :root {
+        --size: 4vw !important;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) {
+    :root {
+        --size: 5vh !important;
+    }
+}
+
+@media (max-aspect-ratio: 450/750) {
+    :root {
+        --size: 4vh !important;
+    }
 }
 
 body, html {
@@ -24,11 +42,12 @@ body, html {
     padding: 0;
 }
 
-#app-container {
+.app-container {
     background: var(--blue);
     display: grid;
     place-items: center;
     height: 100vh;
+    width: 100vw;
 }
 
 #menu {
