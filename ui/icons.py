@@ -1,5 +1,5 @@
 """
-New Icon UI component
+Icon UI components
 
 author: David den Uyl (djdenuyl@gmail.nl)
 date: 2023-03-19
@@ -7,10 +7,14 @@ date: 2023-03-19
 from dash.html import Div
 
 
-def new_icon() -> Div:
-    return Div(
-        className='new-icon',
-        children=[
+class NewIcon(Div):
+    def __init__(self, **kwargs):
+        self.className = 'new-icon'
+        super().__init__(className=self.className, children=self.icon, **kwargs)
+
+    @property
+    def icon(self) -> list[Div]:
+        return [
             Div(
                 className='outer',
                 children=[
@@ -20,13 +24,16 @@ def new_icon() -> Div:
                 ]
             ),
         ]
-    )
 
 
-def help_icon() -> Div:
-    return Div(
-        className='help-icon',
-        children=[
+class HelpIcon(Div):
+    def __init__(self, **kwargs):
+        self.className = 'help-icon'
+        super().__init__(className=self.className, children=self.icon, **kwargs)
+
+    @property
+    def icon(self) -> list[Div]:
+        return [
             Div(
                 className='letter',
                 children=[
@@ -35,13 +42,16 @@ def help_icon() -> Div:
                 ]
             ),
         ]
-    )
 
 
-def timer_icon() -> Div:
-    return Div(
-        className='timer-icon',
-        children=[
+class TimerIcon(Div):
+    def __init__(self, **kwargs):
+        self.className = 'timer-icon'
+        super().__init__(className=self.className, children=self.icon, **kwargs)
+
+    @property
+    def icon(self) -> list[Div]:
+        return [
             Div(
                 className='v',
                 children=[
@@ -50,5 +60,3 @@ def timer_icon() -> Div:
                 ]
             ),
         ]
-    )
-

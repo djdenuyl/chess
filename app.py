@@ -5,18 +5,20 @@ author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
 from dash import Dash, Input, Output, ctx, State, ALL
+from dash.dcc import Interval
 from dash.exceptions import PreventUpdate
-from dash.html import Div, Button, Img
+from dash.html import Div, Button
 from flask import Flask
 from pathlib import Path
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
 from typing import Optional
-
-from ui.icons import new_icon, help_icon, timer_icon
+from ui.clock import Clock
+from ui.icons import NewIcon, HelpIcon, TimerIcon
 from utils.color import Color, opponent
 from utils.letters import LETTERS
+from utils.time import time_int_to_str
 
 
 class App:
@@ -27,6 +29,7 @@ class App:
         self.tiles = None
         self.selected_tile_name = None
         self.help = False
+        self.timer = False
 
         self.dash.layout = self.layout
         self.callbacks()
@@ -45,6 +48,7 @@ class App:
             children=[
                 Div(id='menu', children=self.init_menu_items()),
                 Div(id='indicator', children=Div(id='signal', className='signal')),
+                Div(id='clocks', className='clocks', children=self.init_clocks()),
                 Div(id='promotion'),
                 Div(id='border', children=self.init_labels()),
                 Div(id='chessboard', children=self.init_board()),
@@ -59,9 +63,17 @@ class App:
     def init_menu_items() -> list[Button]:
         """ create the menu items """
         return [
-            Button(id='new', className='new menu-item', children=new_icon()),
-            Button(id='help', className='help menu-item', children=help_icon()),
-            Button(id='timer', className='timer menu-item', children=timer_icon())
+            Button(id='new', className='new menu-item', children=NewIcon()),
+            Button(id='help', className='help menu-item', children=HelpIcon()),
+            Button(id='timer', className='timer menu-item', children=TimerIcon())
+        ]
+
+    def init_clocks(self) -> Optional[list[Div]]:
+        """ create the time clocks """
+        return [
+            Interval(id='ticker', interval=1_000, disabled=not self.timer),
+            Clock(id='black-clock', className='clock', time=time_int_to_str(self.game.time)),
+            Clock(id='white-clock', className='clock', time=time_int_to_str(self.game.time)),
         ]
 
     def init_board(self) -> list[Button]:
@@ -200,7 +212,9 @@ class App:
             # check if a promotion event is ongoing
             promotion_tile = self.game.which_pawn_promotable()
 
-            if ctx.triggered_id is None or self.game.state() == GameState.CHECKMATE:
+            if ctx.triggered_id is None \
+                    or self.game.state() == GameState.CHECKMATE \
+                    or self.game.state() == GameState.OUT_OF_TIME:
                 raise PreventUpdate
 
             # if clicked on a tile
@@ -263,15 +277,24 @@ class App:
         @self.dash.callback(
             Output('signal', 'className'),
             Input('chessboard', 'children'),
-            Input('new', 'n_clicks')
+            Input('new', 'n_clicks'),
+            Input('ticker', 'n_intervals')
         )
         def update_indicator(*_):
+            # threshold is set to 1 so the marker is updated at the next clock tick, when the clock is at 00:00
+            threshold = 1
+
+            # preventing update if the ticker triggers this callback but the player is not out of time,
+            # so it doesnt calculate whether checkmate is reached every clock tick
+            if ctx.triggered_id == 'ticker' and not self.game.out_of_time(threshold):
+                raise PreventUpdate
+
             clss = ['signal']
             if self.game.turn == Color.BLACK:
                 clss.append('move')
             if self.game.check():
                 clss.append('check')
-            if self.game.checkmate():
+            if self.game.checkmate() or self.game.out_of_time(threshold):
                 clss.append('checkmate')
 
             return ' '.join(clss)
@@ -287,9 +310,15 @@ class App:
                 raise PreventUpdate
 
             # init a new game
-            self.game = Game()
-            [chessboard_idx] = [app_elements.index(i) for i in app_elements if i['props']['id'] == 'chessboard']
-            app_elements[chessboard_idx]['props']['children'] = [b.to_plotly_json() for b in self.init_board()]
+            self.game = Game(10)
+
+            # reset the board and the clock
+            for component, initializer in [
+                ('chessboard', self.init_board),
+                ('clocks', self.init_clocks)
+            ]:
+                [idx] = [app_elements.index(i) for i in app_elements if i['props']['id'] == component]
+                app_elements[idx]['props']['children'] = [i.to_plotly_json() for i in initializer()]
 
             return app_elements
 
@@ -309,6 +338,40 @@ class App:
 
             self.help = True
             return 'help menu-item on'
+
+        @self.dash.callback(
+            Output('timer', 'className'),
+            Output('clocks', 'className'),
+            Output('ticker', 'disabled'),
+            Input('timer', 'n_clicks'),
+            prevent_initial_callback=True
+        )
+        def toggle_timer(_):
+            if ctx.triggered_id is None:
+                raise PreventUpdate
+
+            # toggle timer attr
+            if self.timer:
+                self.timer = False
+                return 'timer menu-item', 'clocks', True
+
+            self.timer = True
+            return 'timer menu-item on', 'clocks visible', False
+
+        @self.dash.callback(
+            Output('white-clock', 'children'),
+            Output('black-clock', 'children'),
+            Input('ticker', 'n_intervals'),
+            State('white-clock', 'children'),
+            State('black-clock', 'children')
+        )
+        def tick_timer(_, white_time, black_time):
+            if self.game.turn == Color.WHITE:
+                self.game.update_player_time(Color.WHITE)
+                return time_int_to_str(self.game.white.time), black_time
+
+            self.game.update_player_time(Color.BLACK)
+            return white_time, time_int_to_str(self.game.black.time)
 
 
 if __name__ == '__main__':

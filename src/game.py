@@ -7,7 +7,7 @@ date: 2022-10-19
 """
 from itertools import compress
 from src.piece import Blank, King, PieceType, Pawn, Queen, Bishop, Knight, Rook
-from src.player import WHITE_PLAYER, BLACK_PLAYER
+from src.player import WhitePlayer, BlackPlayer
 from src.state import State
 from src.tile import Tile
 from src.board import Board
@@ -18,16 +18,17 @@ from utils.vector import get_vector
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, time: int = 20 * 60):
         self.board = Board()
-        self.white = WHITE_PLAYER
-        self.black = BLACK_PLAYER
-        self.players = [self.white, self.black]
+        self.time = time
+        self.white = WhitePlayer(self.time)
+        self.black = BlackPlayer(self.time)
+        self.players = {Color.WHITE: self.white, Color.BLACK: self.black}
         self.turn = Color.WHITE
         self._init_pieces()
 
     def _init_pieces(self):
-        for player in self.players:
+        for player in self.players.values():
             for k, v in player.start_positions.items():
                 for t in v:
                     self.board.tiles[self.board.height - t.y][t.x_int].piece = k(player.color)
@@ -229,6 +230,14 @@ class Game:
 
         return False
 
+    def out_of_time(self, threshold: int = 0) -> bool:
+        """ check for the player who's turn it is whether they're out of time. Threshold determines when
+         a player is out of time. default to 0 seconds """
+        if self.players.get(self.turn).time == threshold:
+            return True
+
+        return False
+
     def promote(self, pawn_tile: Tile, piece_type: Type[PieceType]):
         """ promotes a pawn to another piece when it reaches the other side """
         if not isinstance(pawn_tile.piece, Pawn) \
@@ -251,8 +260,16 @@ class Game:
             return State.CHECKMATE
         elif self.check():
             return State.CHECK
+        elif self.out_of_time():
+            return State.OUT_OF_TIME
         else:
             return
+
+    def update_player_time(self, color: Color):
+        if self.players.get(color).time == 0:
+            return
+
+        self.players.get(color).time -= 1
 
     def print(self):
         """ print out the current board state"""

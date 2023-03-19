@@ -17,6 +17,8 @@ date: 2022-10-19
     --size: 5vw;
     --white-tile: var(--white);
     --black-tile: var(--orange);
+
+    --menu-button-background: var(--orange);
 }
 
 @media (min-aspect-ratio: 1300/750) {
@@ -34,6 +36,15 @@ date: 2022-10-19
 @media (max-aspect-ratio: 450/750) {
     :root {
         --size: 4vh !important;
+    }
+
+    .clocks {
+        height: calc(.5 * var(--size)) !important;
+        width: calc(6.5 * var(--size)) !important;
+        margin-left: 0 !important;
+        margin-top: calc(10 * var(--size)) !important;
+        flex-direction: row !important;
+        justify-content: space-between;
     }
 }
 
@@ -89,17 +100,17 @@ body, html {
 }
 
 .help {
-    background: var(--orange);
+    background: var(--menu-button-background);
 }
 
 .timer {
-    background: var(--orange);
+    background: var(--menu-button-background);
     font-size: calc(.3 * var(--size));
 }
 
 
 .on {
-    background: var(--teal);
+    --menu-button-background: var(--teal);
 }
 
 #indicator {
@@ -136,6 +147,28 @@ body, html {
 .checkmate {
     background: var(--black);
 }
+
+.clocks {
+    grid-area: 1 / 1 / 1 / 1;
+    width: calc(.5 * var(--size));
+    height: calc(6.5 * var(--size));
+    margin-left: calc(10 * var(--size));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--size);
+    visibility: hidden;
+}
+
+.clocks.visible {
+    visibility: visible;
+}
+
+.clock {
+    color: var(--white);
+    font-family: 'Open Sans', sans-serif;
+}
+
 
 .promotion-tile {
     display: grid;
@@ -357,7 +390,7 @@ button {
 }
 
 /* timer */
-.v {
+.timer-icon .v {
   height: 100%;
   aspect-ratio: 1;
   background: var(--blue);
@@ -372,11 +405,11 @@ button {
   )
 }
 
-.sand-top {
+.timer-icon .sand-top {
   position: absolute;
   height: 100%;
   aspect-ratio: 1;
-  background: var(--orange);
+  background: var(--menu-button-background);
   clip-path: polygon(
     32% 10%,
     68% 10%,
@@ -384,11 +417,11 @@ button {
   )
 }
 
-.sand-bottom {
+.timer-icon .sand-bottom {
   position: absolute;
   height: 100%;
   aspect-ratio: 1;
-  background: var(--orange);
+  background: var(--menu-button-background);
   clip-path: polygon(
     41% 70%,
     59% 70%,
