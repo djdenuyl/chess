@@ -13,6 +13,8 @@ from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
 from typing import Optional
+
+from ui.icons import new_icon, help_icon, timer_icon
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 
@@ -53,12 +55,13 @@ class App:
         """ play the game """
         self.dash.run(**kwargs)
 
-    def init_menu_items(self) -> list[Button]:
+    @staticmethod
+    def init_menu_items() -> list[Button]:
         """ create the menu items """
         return [
-            Button(id='new', className='new menu-item', children=Img(src=self.icon_path('menu', 'new.svg'))),
-            Button(id='help', className='help menu-item', children=Img(src=self.icon_path('menu', 'help.svg'))),
-            Button(id='timer', className='timer menu-item', children=Img(src=self.icon_path('menu', 'timer.svg')))
+            Button(id='new', className='new menu-item', children=new_icon()),
+            Button(id='help', className='help menu-item', children=help_icon()),
+            Button(id='timer', className='timer menu-item', children=timer_icon())
         ]
 
     def init_board(self) -> list[Button]:

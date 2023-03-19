@@ -67,10 +67,11 @@ body, html {
     color: var(--blue);
     border: none;
     border-radius: 50%;
-    font-size: calc(.4 * var(--size));
     cursor: pointer;
     display: grid;
     place-items: center;
+    margin: 0;
+    padding: 0;
 }
 
 .menu-item:active {
@@ -85,7 +86,6 @@ body, html {
 
 .new {
     background: var(--teal);
-    line-height: 0.3;
 }
 
 .help {
@@ -261,4 +261,137 @@ button {
 .threatening {
     background-blend-mode: multiply;
     background-color: var(--teal);
+}
+
+/* STYLING THE ICONS */
+.new-icon, .help-icon, .timer-icon {
+    height: 70%;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+}
+
+.new-icon .outer {
+  border-radius: 50%;
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--blue);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.new-icon .inner {
+   aspect-ratio: 1;
+   height: 70%;
+   border-radius: 50%;
+   background: var(--teal);
+}
+
+.new-icon .gap {
+  border-radius: 50%;
+  border: 1px solid var(--teal);
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--teal);
+  display: grid;
+  place-items: center;
+  position: absolute;
+  clip-path:polygon(
+    50% 50%,
+    150% 0%,
+    100% 0%,100% 50%,
+    100% 70%,
+    50% 50%
+  );
+}
+
+.new-icon .arrowhead {
+  position: absolute;
+  width: 30%;
+  aspect-ratio: 1;
+  background: var(--blue);
+  right: 4%;
+  top: 10%;
+  clip-path: polygon(
+    100% 0%,
+    0% 100%,
+    100% 100%
+  )
+}
+
+/* info*/
+.help-icon .letter {
+  height: 100%;
+  aspect-ratio: 1;
+  background: inherit;
+  position: relative;
+}
+
+.help-icon .dot {
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--blue);
+  clip-path: circle(10% at 50% 10%);
+  position: absolute;
+}
+
+.help-icon .stem {
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--blue);
+  position: absolute;
+  clip-path: polygon(
+    25% 100%,
+    25% 90%,
+    40% 90%,
+    40% 40%,
+    30% 40%,
+    30% 30%,
+    40% 30%,
+    60% 30%,
+    60% 90%,
+    75% 90%,
+    75% 100%
+  );
+}
+
+/* timer */
+.v {
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--blue);
+  position: relative;
+  clip-path: polygon(
+    15% 100%,
+    40% 50%,
+    15% 0%,
+    85% 0%,
+    60% 50%,
+    85% 100%
+  )
+}
+
+.sand-top {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--orange);
+  clip-path: polygon(
+    32% 10%,
+    68% 10%,
+    50% 45%
+  )
+}
+
+.sand-bottom {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1;
+  background: var(--orange);
+  clip-path: polygon(
+    41% 70%,
+    59% 70%,
+    50% 55%
+  )
 }
