@@ -37,12 +37,13 @@ date: 2022-10-19
     }
 }
 
+
 body, html {
     margin: 0;
     padding: 0;
 }
 
-.app-container {
+#app-container {
     background: var(--blue);
     display: grid;
     place-items: center;

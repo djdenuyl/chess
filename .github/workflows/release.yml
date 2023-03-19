@@ -1,4 +1,5 @@
-# TODO: CI/CD
+# TODO: configure CI/CD
+# source: https://github.com/google-github-actions/deploy-cloudrun
 #name: release-to-gcp
 #on:
 #  push:
@@ -6,6 +7,7 @@
 #      - main
 #jobs:
 #  deploy:
-#
-#
-#
+#    runs-on: google/cloud-sdk:latest
+#    steps:
+#      - run: gcloud builds submit --tag [IMAGE] .
+#      - run: gcloud run deploy chess --image [IMAGE]
