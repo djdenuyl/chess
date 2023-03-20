@@ -310,7 +310,7 @@ class App:
                 raise PreventUpdate
 
             # init a new game
-            self.game = Game(10)
+            self.game = Game()
 
             # reset the board and the clock
             for component, initializer in [
