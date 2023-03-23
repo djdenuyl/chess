@@ -3,6 +3,7 @@ author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-19
 """
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import TypeVar
 from utils.color import Color, opponent
 from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
@@ -182,3 +183,12 @@ PIECE_TYPE_MAPPER = {
     'rook': Rook,
     'pawn': Pawn
 }
+
+
+class PieceOption(Enum):
+    KING = 'king'
+    QUEEN = 'queen'
+    BISHOP = 'bishop'
+    KNIGHT = 'knight'
+    ROOK = 'rook'
+    PAWN = 'pawn'
