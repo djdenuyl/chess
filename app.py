@@ -9,13 +9,13 @@ from dash.dcc import Interval
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from flask import Flask
-from pathlib import Path
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
 from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
+from ui.pawn import UI_PIECE_MAPPER, UIPiece
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 from utils.time import time_int_to_str
@@ -31,15 +31,13 @@ class App:
         self.help = False
         self.timer = False
 
+        # last step in the constructor is to set up the dash app
+        self.setup()
+
+    def setup(self):
+        """ set up the dash app by adding the layout and the callbacks """
         self.dash.layout = self.layout
         self.callbacks()
-
-    def icon_path(self, *args: str) -> str:
-        base = Path(self.dash.get_asset_url('icons'))
-        for arg in args:
-            base /= arg
-
-        return base.as_posix()
 
     @property
     def layout(self) -> Div:
@@ -78,6 +76,8 @@ class App:
 
     def init_board(self) -> list[Button]:
         """ initiate the game board. update the original classes of each tile"""
+        # TODO: 1) map all pieces to ui pieces
+        # TODO: 2) get tile color from css
         buttons = []
         self.original_classes = []
         for row in self.game.board.tiles:
@@ -91,7 +91,8 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=str(tile.piece)
+                        children=p if isinstance(p := UI_PIECE_MAPPER.get(type(tile.piece), str(tile.piece)), str)
+                        else p(tile.piece.color, '#264653', 'white' if tile.color == '⬜' else '#F4A261')
                     )
                 )
 

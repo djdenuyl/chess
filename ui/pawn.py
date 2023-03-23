@@ -8,14 +8,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dash.html import Div
 from typing import Optional
-from src.piece import PieceOption
+from src.piece import PieceOption, Pawn
 from utils.color import Color
 
 
 class UIPieceBuilder:
-    def __init__(self, piece: PieceOption, color: Color, parts: Optional[list] = None):
-        self.piece = piece
-        self.color = color
+    def __init__(self, parts: Optional[list] = None):
         self.parts = parts
 
         if self.parts is None:
@@ -23,15 +21,12 @@ class UIPieceBuilder:
 
     def build(self) -> Div:
         return Div(
-            className=f'container {self.piece.value} {self.color.value}',
-            children=Div(
-                className='model',
-                children=self.parts
-            )
+            className='model',
+            children=self.parts
         )
 
     def add(self, class_name: str) -> UIPieceBuilder:
-        return type(self)(self.piece, self.color, self.parts + [Div(className=class_name)])
+        return type(self)(self.parts + [Div(className=class_name)])
 
     def add_pedestal(self) -> UIPieceBuilder:
         return self.add('pedestal')
@@ -74,10 +69,20 @@ class UIPieceBuilder:
 
 
 class UIPiece(ABC, Div):
-    def __init__(self, color: Color, **kwargs):
+    def __init__(self, color: Color, piece_color: str, bg_color: str, **kwargs):
         self.color = color
-        self.builder = UIPieceBuilder(self.piece, self.color)
-        super().__init__(children=self.build_piece(), **kwargs)
+        self.bg_color = bg_color
+        self.builder = UIPieceBuilder()
+        self.className = f'container {self.piece.value} {self.color.value}'
+        super().__init__(
+            className=self.className,
+            style={
+                '--piece-color': piece_color,
+                '--bgcolor': bg_color
+            },
+            children=self.build_piece(),
+            **kwargs
+        )
 
     @property
     @abstractmethod
@@ -125,6 +130,7 @@ class UIPawn(UIPiece):
             .add_foot() \
             .add_foot_hole() \
             .add_body() \
+            .add_body_hole() \
             .add_body_fill() \
             .add_shoulder() \
             .add_shoulder_hole() \
@@ -133,4 +139,6 @@ class UIPawn(UIPiece):
             .build()
 
 
-self = UIPawn(color=Color.WHITE)
+UI_PIECE_MAPPER = {
+    Pawn: UIPawn
+}
