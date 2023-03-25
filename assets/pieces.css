@@ -227,7 +227,7 @@
   left: 6.5%;
 }
 
-.supermane {
+.mane {
   background: var(--piece-color);
   position: absolute;
   width: 100%;
@@ -239,7 +239,7 @@
   transform: scale(1.2)
 }
 
-.supermane-hole {
+.mane-hole {
   background: var(--bgcolor);
   position: absolute;
   width: 100%;
@@ -381,7 +381,7 @@
   clip-path: ellipse(25% 50% at 50% 50%);
 }
 
-.mane {
+.neck {
   background: var(--piece-color);
   position: absolute;
   width: 25%;
@@ -392,7 +392,7 @@
   transform: rotate(-60deg);
 }
 
-.mane-hole {
+.neck-hole {
   background: var(--bgcolor);
   position: absolute;
   width: 13%;

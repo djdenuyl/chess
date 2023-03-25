@@ -84,6 +84,12 @@ class UIPieceBuilder:
     def add_snout(self):
         return self.add('snout')
 
+    def add_neck(self):
+        return self.add('neck')
+
+    def add_neck_hole(self):
+        return self.add('neck-hole')
+
     def add_eye(self):
         s = PIECE_SCALE_FACTOR
         path = self.scale('path("m 94.152597,36.113755 c 1.79209,8.351338 -5.312927,11.993216 -10.455928,9.205762 0.511566,-3.785635 7.137462,-9.392004 10.455928,-9.205762 z")', s)
@@ -221,7 +227,10 @@ class UIKnight(UIPiece):
             .add_upper_body() \
             .add_upper_body_fill() \
             .add_right_ear() \
+            .add_mane() \
+            .add_mane_hole() \
             .add_left_ear() \
+            .add_neck() \
             .add_nose() \
             .add_snout() \
             .add_face() \
