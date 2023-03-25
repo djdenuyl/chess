@@ -51,6 +51,9 @@ class UIPieceBuilder:
     def add_body_fill(self) -> UIPieceBuilder:
         return self.add('body-fill')
 
+    # def add_body_fill_hole(self) -> UIPieceBuilder:
+    #     return self.add('body-fill-hole')
+
     def add_shoulder(self) -> UIPieceBuilder:
         return self.add('shoulder')
 
@@ -78,11 +81,23 @@ class UIPieceBuilder:
     def add_nose(self):
         return self.add('nose')
 
+    def add_nose_hole(self):
+        return self.add('nose-hole')
+
     def add_face(self):
         return self.add('face')
 
+    def add_face_hole(self):
+        return self.add('face-hole')
+
     def add_snout(self):
         return self.add('snout')
+
+    def add_snout_outline(self):
+        return self.add('snout-outline')
+
+    def add_snout_hole(self):
+        return self.add('snout-hole')
 
     def add_neck(self):
         return self.add('neck')
@@ -90,12 +105,48 @@ class UIPieceBuilder:
     def add_neck_hole(self):
         return self.add('neck-hole')
 
+    def add_mane(self):
+        s = PIECE_SCALE_FACTOR
+        path = self.scale(
+            'path("m 135.63534,127.03486 c 4.88867,-22.95693 17.6283,-34.301315 22.47599,-45.241118 21.37925,-48.246605 -8.60704,-77.5078523 -49.22096,-74.5211696 -2.36366,0.1738201 0.49151,11.1115656 0.49151,11.1115656 37.7491,-4.669007 53.61883,30.653212 35.9107,63.140057 -17.18396,10.367624 -11.49156,30.051845 -9.65724,45.510665 z")',
+            s
+        )
+
+        return self.add(
+            class_name='mane',
+            style={'clipPath': path}
+        )
+
+    def add_mane_hole(self):
+        s = PIECE_SCALE_FACTOR
+        path = self.scale(
+            ' path("m 135.63534,127.03486 c 4.88867,-22.95693 17.6283,-34.301315 22.47599,-45.241118 21.37925,-48.246605 -8.60704,-77.5078523 -49.22096,-74.5211696 -2.36366,0.1738201 0.49151,11.1115656 0.49151,11.1115656 37.7491,-4.669007 53.61883,30.653212 35.9107,63.140057 -17.18396,10.367624 -11.49156,30.051845 -9.65724,45.510665 z")',
+            s
+        )
+
+        return self.add(
+            class_name='mane-hole',
+            style={'clipPath': path}
+        )
+
+    def add_nostril(self):
+        return self.add('nostril')
+
     def add_eye(self):
         s = PIECE_SCALE_FACTOR
         path = self.scale('path("m 94.152597,36.113755 c 1.79209,8.351338 -5.312927,11.993216 -10.455928,9.205762 0.511566,-3.785635 7.137462,-9.392004 10.455928,-9.205762 z")', s)
 
         return self.add(
             class_name='eye',
+            style={'clipPath': path}
+        )
+
+    def add_eye_outline(self):
+        s = PIECE_SCALE_FACTOR
+        path = self.scale('path("m 94.152597,36.113755 c 1.79209,8.351338 -5.312927,11.993216 -10.455928,9.205762 0.511566,-3.785635 7.137462,-9.392004 10.455928,-9.205762 z")', s)
+
+        return self.add(
+            class_name='eye-outline',
             style={'clipPath': path}
         )
 
@@ -224,16 +275,18 @@ class UIKnight(UIPiece):
             .add_foot() \
             .add_body() \
             .add_body_fill() \
-            .add_upper_body() \
-            .add_upper_body_fill() \
             .add_right_ear() \
             .add_mane() \
             .add_mane_hole() \
-            .add_left_ear() \
             .add_neck() \
-            .add_nose() \
+            .add_neck_hole() \
+            .add_upper_body() \
+            .add_upper_body_fill() \
             .add_snout() \
+            .add_nose() \
+            .add_nostril() \
             .add_face() \
+            .add_left_ear() \
             .add_eye() \
             .build()
 
@@ -246,12 +299,25 @@ class UIKnight(UIPiece):
             .add_body() \
             .add_body_hole() \
             .add_body_fill() \
+            .add_right_ear() \
+            .add_mane() \
+            .add_mane_hole() \
+            .add_neck() \
+            .add_neck_hole() \
+            .add_snout_outline() \
+            .add_snout() \
+            .add_nose() \
+            .add_nose_hole() \
+            .add_face() \
+            .add_face_hole() \
+            .add_snout_hole() \
+            .add_nostril() \
+            .add_left_ear() \
             .add_upper_body() \
             .add_upper_body_hole() \
             .add_upper_body_fill() \
-            .add_nose() \
-            .add_snout() \
-            .add_face() \
+            .add_eye_outline() \
+            .add_eye() \
             .build()
 
 
