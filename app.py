@@ -15,7 +15,7 @@ from src.state import State as GameState
 from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
-from ui.pawn import UI_PIECE_MAPPER, UIPiece
+from ui.pawn import UI_PIECE_MAPPER
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 from utils.time import time_int_to_str

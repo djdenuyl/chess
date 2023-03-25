@@ -1,5 +1,5 @@
 .container {
-  width: 60%;
+  width: calc(200px * var(--piece-scale));
   aspect-ratio: 1;
   background: var(--bgcolor);
   position: relative;
@@ -10,7 +10,7 @@
   aspect-ratio: 1;
   position: relative;
   transform-origin: 50% 100%;
-  transform: scale(0.915);
+  transform: scale(0.915); /* empirical value to make the largest piece 100% container height */
 }
 
 .pedestal {
@@ -166,4 +166,252 @@
   bottom: 75%;
   left: 40%;
   border-radius: 50%;
+}
+
+/*  KNIGHT */
+.knight.container {
+  --left: 15.5%;
+  --bottom: 39%;
+}
+
+.knight .body {
+  background: var(--piece-color);
+  position: absolute;
+  height: 14%;
+  width: 40%;
+  bottom: 18%;
+  left: 30%;
+  border-radius: 0%;
+  clip-path: polygon(
+    0% 100%,
+    7% 0%,
+    93% 00%,
+    100% 100%
+  );
+}
+
+.upper-body {
+  background: var(--piece-color);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: -2.5%;
+}
+
+.upper-body-fill {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: -2.5%;
+  clip-path: path("m 125.06577,137.14983 -10.00132,-0.4546 c -1.59597,-37.690256 5.037,-29.41556 20.31659,-51.73064 -16.41292,24.40487 -12.20498,36.3396 -10.31527,52.18524 z");
+}
+
+.eye {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  /* clip-path: path("m 94.152597,36.113755 c 1.79209,8.351338 -5.312927,11.993216 -10.455928,9.205762 0.511566,-3.785635 7.137462,-9.392004 10.455928,-9.205762 z"); */
+}
+
+.eye-outline {
+  background: var(--piece-color);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  clip-path: path("m 94.152597,36.113755 c 1.79209,8.351338 -5.312927,11.993216 -10.455928,9.205762 0.511566,-3.785635 7.137462,-9.392004 10.455928,-9.205762 z"
+       );
+  transform: scale(2.3);
+  bottom: -38%;
+  left: 6.5%;
+}
+
+.supermane {
+  background: var(--piece-color);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: -6%;
+  bottom: -4%;
+  clip-path: path("m 135.63534,127.03486 c 4.88867,-22.95693 17.6283,-34.301315 22.47599,-45.241118 21.37925,-48.246605 -8.60704,-77.5078523 -49.22096,-74.5211696 -2.36366,0.1738201 0.49151,11.1115656 0.49151,11.1115656 37.7491,-4.669007 53.61883,30.653212 35.9107,63.140057 -17.18396,10.367624 -11.49156,30.051845 -9.65724,45.510665 z"
+       );
+  transform: scale(1.2)
+}
+
+.supermane-hole {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: -2.5%;
+  bottom: 2%;
+  clip-path: path("m 135.63534,127.03486 c 4.88867,-22.95693 17.6283,-34.301315 22.47599,-45.241118 21.37925,-48.246605 -8.60704,-77.5078523 -49.22096,-74.5211696 -2.36366,0.1738201 0.49151,11.1115656 0.49151,11.1115656 37.7491,-4.669007 53.61883,30.653212 35.9107,63.140057 -17.18396,10.367624 -11.49156,30.051845 -9.65724,45.510665 z"
+       );
+  transform: scale(0.95);
+}
+
+.nose {
+  background: var(--piece-color);
+  position: absolute;
+  width: 18%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  bottom: var(--bottom);
+  left: var(--left);
+}
+
+.nose-hole {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 12%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  bottom: calc(var(--bottom) + 3%);
+  left: calc(var(--left) + 3%);
+}
+
+.white .nostril {
+  background: var(--piece-color);
+  position: absolute;
+  width: 5%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  top: 48%;
+  left: 20%;
+}
+
+.snout {
+  background: var(--piece-color);
+  position: absolute;
+  width: 35%;
+  height: 25%;
+  border: 1px solid var(--bgcolor);
+  left: calc(var(--left) + 2%);
+  bottom: calc(var(--bottom) + 7.5%);
+  clip-path: polygon(
+    0% 14%,
+    100% 0%,
+    100% 100%,
+    0% 75%
+  );
+  transform: rotate(-50deg);
+}
+
+.snout-hole {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 35%;
+  height: 15%;
+  left: calc(var(--left) + 2%);
+  bottom: calc(var(--bottom) + 12.5%);
+  clip-path: polygon(
+    0% 14%,
+    100% 0%,
+    100% 100%,
+    0% 75%
+  );
+  transform: rotate(-50deg);
+}
+
+.snout-outline {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 43%;
+  height: 25%;
+  left: calc(var(--left) + 2%);
+  bottom: calc(var(--bottom) + 7.5%);
+  clip-path: polygon(
+    0% 14%,
+    100% 0%,
+    100% 100%,
+    0% 75%
+  );
+  transform: rotate(-47deg);
+}
+
+.face {
+  background: var(--piece-color);
+  position: absolute;
+  width: 30%;
+  height: 50%;
+  bottom: calc(var(--bottom) + 11%);
+  left: calc(var(--left) + 19%);
+  clip-path: ellipse(50% 25% at 50%);
+}
+
+.face-hole {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 30%;
+  height: 50%;
+  bottom: calc(var(--bottom) + 11%);
+  left: calc(var(--left) + 19%);
+  clip-path: ellipse(50% 25% at 50%);
+  transform: scale(0.7);
+}
+
+.nostril {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 25%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  top: 24%;
+  left: 21%;
+}
+
+.ear.right {
+  background: var(--piece-color);
+  position: absolute;
+  width: 15%;
+  aspect-ratio: 1;
+  bottom: calc(var(--bottom) + 43%);
+  left: calc(var(--left) + 27%);
+  clip-path: ellipse(25% 50% at 50% 50%);
+}
+
+.ear.left {
+  background: var(--piece-color);
+  position: absolute;
+  width: 15%;
+  aspect-ratio: 1;
+  bottom: calc(var(--bottom) + 43%);
+  left: calc(var(--left) + 34%);
+  clip-path: ellipse(25% 50% at 50% 50%);
+}
+
+.mane {
+  background: var(--piece-color);
+  position: absolute;
+  width: 25%;
+  height: 40%;
+  bottom: calc(var(--bottom) + 20%);
+  left: calc(var(--left) + 32%);
+  border-radius: 0 100% 100% 0 / 0 50% 50% 0;
+  transform: rotate(-60deg);
+}
+
+.mane-hole {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 13%;
+  height: 30%;
+  bottom: calc(var(--bottom) + 20%);
+  left: calc(var(--left) + 39%);
+  border-radius: 0 100% 100% 0 / 0 50% 50% 0;
+}
+
+.white .upper-body-fill {
+  background: var(--piece-color);
+}
+
+.upper-body-hole {
+  background: var(--bgcolor);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  bottom: -2.8%;
+  left: -2%;
+  transform: scale(.85);
 }
