@@ -12,11 +12,20 @@ from ui.pieces.queen import UIQueen
 from ui.pieces.rook import UIRook
 
 
+# UI_PIECE_MAPPER = {
+#     Bishop: UIBishop,
+#     King: UIKing,
+#     Knight: UIKnight,
+#     Pawn: UIPawn,
+#     Queen: UIQueen,
+#     Rook: UIRook,
+# }
+
 UI_PIECE_MAPPER = {
-    Bishop: UIBishop,
-    King: UIKing,
-    Knight: UIKnight,
+    Bishop: UIPawn,
+    King: UIPawn,
+    Knight: UIPawn,
     Pawn: UIPawn,
-    Queen: UIQueen,
-    Rook: UIRook,
+    Queen: UIPawn,
+    Rook: UIPawn,
 }

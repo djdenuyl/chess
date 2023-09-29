@@ -16,6 +16,7 @@ from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
 from ui.pieces import UI_PIECE_MAPPER
+from ui.pieces.piece import get_piece
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 from utils.time import time_int_to_str
@@ -91,8 +92,8 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=p if isinstance(p := UI_PIECE_MAPPER.get(type(tile.piece), str(tile.piece)), str)
-                        else p(tile.piece.color, '#264653', 'white' if tile.color == '⬜' else '#F4A261')
+                        children=None if isinstance(tile.piece, str)
+                        else get_piece(tile.piece, '#264653', 'white' if tile.color == '⬜' else '#F4A261')
                     )
                 )
 

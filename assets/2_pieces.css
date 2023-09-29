@@ -1,5 +1,5 @@
 .container {
-  width: calc(200px * var(--piece-scale));
+  width: 80%;
   aspect-ratio: 1;
   background: var(--bgcolor);
   position: relative;

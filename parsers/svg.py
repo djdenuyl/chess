@@ -196,6 +196,7 @@ class SVGParser:
     def parse_svg(
             self,
             classes: list[str] | None = None,
+            styles: dict[str: str] | None = None,
             with_color: bool = True,
             view_box: tuple[int, int, int, int] | None = None
     ) -> Svg:
@@ -208,8 +209,8 @@ class SVGParser:
         view_box_str = " ".join([str(v) for v in view_box])
 
         return Svg(
-            id=id,
             className=' '.join(classes),
+            style=styles,
             children=[
                 G(
                     children=self.parse_shapes(with_color=with_color)

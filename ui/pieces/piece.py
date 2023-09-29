@@ -5,11 +5,22 @@ author: David den Uyl (djdenuyl@gmail.com)
 date: 2023-03-23
 """
 from abc import ABC, abstractmethod
+from pathlib import Path
 from dash.html import Div
+from dash_svg import Svg
+from parsers.svg import SVGParser
 from src.piece import PieceOption
 from ui.pieces.builder import UIPieceBuilder
 from utils.color import Color
-from utils.settings import PIECE_SCALE_FACTOR
+
+
+def get_piece(piece: str, piece_color: str, tile_color: str) -> Svg:
+    return SVGParser.from_file(
+        file=Path('assets', 'pieces', piece_color, f'{piece}.svg'),
+        fill='white',
+        stroke='black',
+        stroke_width=0
+    ).parse_svg()
 
 
 class UIPiece(ABC, Div):
@@ -23,7 +34,6 @@ class UIPiece(ABC, Div):
             style={
                 '--piece-color': piece_color,  # TODO: move all settings to settings.py?
                 '--bgcolor': bg_color,
-                '--piece-scale': PIECE_SCALE_FACTOR
             },
             children=self.build_piece(),
             **kwargs
