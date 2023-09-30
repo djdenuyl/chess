@@ -25,7 +25,7 @@ def get_piece(tile: Tile) -> Svg | None:
 
     return SVGParser \
         .from_file(
-            file=Path('assets', 'pieces', color, f'pawn.svg'),
+            file=Path('assets', 'pieces', color, f'{piece_type}.svg'),
             fill='#264653',
             stroke_width=0
         ) \
