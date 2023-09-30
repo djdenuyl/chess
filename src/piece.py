@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TypeVar
 from utils.color import Color, opponent
+from utils.dict import ReversibleDict
 from utils.direction import Direction, DIAGONAL_DIRECTIONS, STRAIGHT_DIRECTIONS
 from utils.length import Length
 from utils.vector import get_vector
@@ -175,14 +176,14 @@ class Blank(Piece):
         return False
 
 
-PIECE_TYPE_MAPPER = {
+PIECE_TYPE_MAPPER = ReversibleDict({
     'king': King,
     'queen': Queen,
     'bishop': Bishop,
     'knight': Knight,
     'rook': Rook,
     'pawn': Pawn
-}
+})
 
 
 class PieceOption(Enum):

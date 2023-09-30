@@ -429,3 +429,8 @@ button {
     50% 55%
   )
 }
+
+.piece {
+    height: 60%;
+    aspect-ratio: 1;
+}

@@ -92,8 +92,7 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=None if isinstance(tile.piece, str)
-                        else get_piece(tile.piece, '#264653', 'white' if tile.color == '⬜' else '#F4A261')
+                        children=get_piece(tile)
                     )
                 )
 

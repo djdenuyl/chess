@@ -4,6 +4,7 @@ SVG Parser
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2023-05-10
 """
+from __future__ import annotations
 from dash.development.base_component import Component
 from dash_svg import Circle, Ellipse, Line, Path, Polygon, Polyline, Rect, Svg, G
 from enum import Enum
@@ -45,7 +46,7 @@ class SVGParser:
         self.stroke_width = stroke_width
 
     @classmethod
-    def from_file(cls, file: FilePath, **kwargs):
+    def from_file(cls, file: FilePath, **kwargs) -> SVGParser:
         with open(file, 'r') as f:
             data = f.read()
 
@@ -99,7 +100,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def parse_ellipse(self, shape: _Element, with_color: bool = False) -> Ellipse:
@@ -112,7 +114,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def parse_line(self, shape: _Element, with_color: bool = False) -> Line:
@@ -125,7 +128,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def parse_path(self, shape: _Element, with_color: bool = False) -> Path:
@@ -135,7 +139,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def parse_polygon(self, shape: _Element, with_color: bool = False) -> Polygon:
@@ -145,7 +150,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def parse_polyline(self, shape: _Element, with_color: bool = False) -> Polyline:
@@ -155,7 +161,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def parse_rect(self, shape: _Element, with_color: bool = False) -> Rect:
@@ -170,7 +177,8 @@ class SVGParser:
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
             strokeWidth=self.stroke_width,
-            fill=self.get_fill(shape, with_color)
+            fill=self.get_fill(shape, with_color),
+            shapeRendering="geometricPrecision"
         )
 
     def get_fill(self, shape, with_color: bool = False) -> Optional[str]:

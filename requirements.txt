@@ -1,5 +1,5 @@
 # dependencies for deployment, use conda.yml for local
-dash==2.6.2
+dash==2.13
 dash-svg==0.0.12
 flask==2.2.2
 gunicorn==20.1.0

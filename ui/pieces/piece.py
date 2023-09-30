@@ -9,18 +9,30 @@ from pathlib import Path
 from dash.html import Div
 from dash_svg import Svg
 from parsers.svg import SVGParser
-from src.piece import PieceOption
+from src.piece import PieceOption, PIECE_TYPE_MAPPER
+from src.tile import Tile
 from ui.pieces.builder import UIPieceBuilder
 from utils.color import Color
 
 
-def get_piece(piece: str, piece_color: str, tile_color: str) -> Svg:
-    return SVGParser.from_file(
-        file=Path('assets', 'pieces', piece_color, f'{piece}.svg'),
-        fill='white',
-        stroke='black',
-        stroke_width=0
-    ).parse_svg()
+def get_piece(tile: Tile) -> Svg | None:
+    piece_type = PIECE_TYPE_MAPPER.reverse.get(tile.piece.__class__)
+
+    if piece_type is None:
+        return None
+
+    color = tile.piece.color.value
+
+    return SVGParser \
+        .from_file(
+            file=Path('assets', 'pieces', color, f'pawn.svg'),
+            fill='#264653',
+            stroke_width=0
+        ) \
+        .parse_svg(
+            with_color=False,
+            classes=['piece']
+        )
 
 
 class UIPiece(ABC, Div):
