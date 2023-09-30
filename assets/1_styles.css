@@ -261,12 +261,12 @@ button {
     background-image: linear-gradient(0deg, var(--black-tile), var(--black-tile));
 }
 
-.selected {
+.selected > svg {
     animation: throb 1s infinite;
 }
 
 @keyframes throb {
-    50% {font-size: calc(var(--size) * 0.75);}
+    50% {scale: 0.75}
 }
 
 .valid-move {

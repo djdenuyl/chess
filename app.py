@@ -8,15 +8,17 @@ from dash import Dash, Input, Output, ctx, State, ALL
 from dash.dcc import Interval
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
+from dash_svg import Svg
 from flask import Flask
+from parsers.svg import SVGParser
+from pathlib import Path
 from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
 from src.state import State as GameState
+from src.tile import Tile
 from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
-from ui.pieces import UI_PIECE_MAPPER
-from ui.pieces.piece import get_piece
 from utils.color import Color, opponent
 from utils.letters import LETTERS
 from utils.time import time_int_to_str
@@ -77,8 +79,6 @@ class App:
 
     def init_board(self) -> list[Button]:
         """ initiate the game board. update the original classes of each tile"""
-        # TODO: 1) map all pieces to ui pieces
-        # TODO: 2) get tile color from css
         buttons = []
         self.original_classes = []
         for row in self.game.board.tiles:
@@ -92,7 +92,7 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=get_piece(tile)
+                        children=self.load_piece_asset(tile)
                     )
                 )
 
@@ -142,7 +142,7 @@ class App:
     def update_placement(self):
         """ update the children of all tiles with the current game state"""
         for i, _ in enumerate(self.tiles):
-            self.tiles[i]['props']['children'] = str(self.game.board.tile_by_index(i).piece)
+            self.tiles[i]['props']['children'] = self.load_piece_asset(self.game.board.tile_by_index(i))
 
     def update_tiles(self) -> list[dict]:
         """ update the tiles, update the placements and effects"""
@@ -198,6 +198,27 @@ class App:
 
         if state is not None:
             print(f'player {self.game.turn.name}: {state.name}')
+
+    @staticmethod
+    def load_piece_asset(tile: Tile) -> Svg | None:
+        """ loads the piece asset on <tile> and return as svg """
+        piece_type = PIECE_TYPE_MAPPER.reverse.get(tile.piece.__class__)
+
+        if piece_type is None:
+            return None
+
+        color = tile.piece.color.value
+
+        return SVGParser \
+            .from_file(
+                file=Path('assets', 'pieces', color, f'{piece_type}.svg'),
+                fill='#264653',
+                stroke_width=0
+            ) \
+            .parse_svg(
+                with_color=False,
+                classes=['piece']
+            )
 
     def callbacks(self):
         @self.dash.callback(
