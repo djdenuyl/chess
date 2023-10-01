@@ -1,6 +1,8 @@
 """
 The Dash application / UI for the game
 
+TODO: bug - game does not correctly check if any piece can take the piece that is checking the king.
+
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
@@ -29,9 +31,6 @@ class App:
         self.dash = Dash(server=Flask(__name__))
         self.game: Game = Game()
         self.original_classes = []
-        self.tiles = None
-        self.help = False
-        self.timer = False
         self.assets = self.load_assets()
 
         # last step in the constructor is to set up the dash app
@@ -47,7 +46,10 @@ class App:
         return Div(
             id='app-container',
             children=[
-                Store(id='selected_tile_store'),
+                Store(id='selected_tile_store'),  # stores the currently selected tile
+                Store(id='help_store'),  # stores whether the help function is activated
+                Store(id='timer_store'),  # stores whether the timer is activated
+                Store(id='tile_store'),  # stores the current state of the tiles
                 Div(id='menu', children=self.init_menu_items()),
                 Div(id='indicator', children=Div(id='signal', className='signal')),
                 Div(id='clocks', className='clocks', children=self.init_clocks()),
@@ -73,7 +75,7 @@ class App:
     def init_clocks(self) -> Optional[list[Div]]:
         """ create the time clocks """
         return [
-            Interval(id='ticker', interval=1_000, disabled=not self.timer),
+            Interval(id='ticker', interval=1_000, disabled=True),
             Clock(id='black-clock', className='clock', time=time_int_to_str(self.game.time)),
             Clock(id='white-clock', className='clock', time=time_int_to_str(self.game.time)),
         ]
@@ -161,36 +163,42 @@ class App:
 
         return svgs
 
-    def reset_effects(self):
+    def reset_effects(self, tiles: list[dict]) -> list[dict]:
         """ reset the class for each tile to its original state"""
         # reset fx
-        for i, _ in enumerate(self.tiles):
-            self.tiles[i]['props']['className'] = self.original_classes[i]
+        for i, _ in enumerate(tiles):
+            tiles[i]['props']['className'] = self.original_classes[i]
 
-    def update_effects(self, index: str, *, add: list[str]):
+        return tiles
+
+    def update_effects(self, tiles: list[dict], index: str, *, add: list[str]) -> list[dict]:
         """ update the class at tile 'index', add each element in 'add' not already in its class list"""
         for a in add:
-            current_classes = self.tiles[self.game.board.index_by_name(index)]['props']['className']
+            current_classes = tiles[self.game.board.index_by_name(index)]['props']['className']
             if a not in current_classes:
-                self.tiles[self.game.board.index_by_name(index)]['props']['className'] = current_classes + ' ' + a
+                tiles[self.game.board.index_by_name(index)]['props']['className'] = current_classes + ' ' + a
 
-    def update_placement(self):
+        return tiles
+
+    def update_placement(self, tiles: list[dict]) -> list[dict]:
         """ update the children of all tiles with the current game state"""
-        for i, _ in enumerate(self.tiles):
-            self.tiles[i]['props']['children'] = self.get_piece_asset(self.game.board.tile_by_index(i).piece)
+        for i, _ in enumerate(tiles):
+            tiles[i]['props']['children'] = self.get_piece_asset(self.game.board.tile_by_index(i).piece)
 
-    def update_tiles(self, selected_tile_name) -> list[dict]:
+        return tiles
+
+    def update_tiles(self, tiles: list[dict], selected_tile_name: str, is_help_activated: bool) -> list[dict]:
         """ update the tiles, update the placements and effects"""
-        self.update_placement()
-        self.reset_effects()
+        tiles = self.update_placement(tiles)
+        tiles = self.reset_effects(tiles)
 
         # if there is a tile selected
         if selected_tile_name is not None:
-            self.update_effects(selected_tile_name, add=['selected'])
-            if self.help:
+            tiles = self.update_effects(tiles, selected_tile_name, add=['selected'])
+            if is_help_activated:
                 # id the valid moves
                 for t in self.game.valid_moves(self.game.board.tile_by_name(selected_tile_name)):
-                    self.update_effects(t.name, add=['valid-move'])
+                    tiles = self.update_effects(tiles, t.name, add=['valid-move'])
 
                 threatened_tiles = [
                     t.name for t in self.game.is_under_thread_by(self.game.board.tile_by_name(selected_tile_name))
@@ -201,13 +209,13 @@ class App:
 
                 for t in set(threatened_tiles + threatening_tiles):
                     if t in threatened_tiles and t in threatening_tiles:
-                        self.update_effects(t, add=['thrthr'])
+                        tiles = self.update_effects(tiles, t, add=['thrthr'])
                     elif t in threatened_tiles:
-                        self.update_effects(t, add=['threatened'])
+                        tiles = self.update_effects(tiles, t, add=['threatened'])
                     else:
-                        self.update_effects(t, add=['threatening'])
+                        tiles = self.update_effects(tiles, t, add=['threatening'])
 
-        return self.tiles
+        return tiles
 
     def update_selection(self, triggered_tile_name: str, selected_tile_name: str | None) -> str:
         """ update the selection state depending on which index was triggered. """
@@ -249,11 +257,12 @@ class App:
             Input({'type': 'promotion', 'index': ALL}, 'n_clicks'),
             State('chessboard', 'children'),
             State('selected_tile_store', 'data'),
+            State('help_store', 'data'),
             prevent_initial_callback=True
         )
-        def render(*args):
+        def render(tile_clicks, promotion_clicks, tiles, selected_tile_name, is_help_activated):
             """ render a new frame of the game """
-            selected_tile_name = args[-1]
+            _ = tile_clicks, promotion_clicks  # unused
 
             # check if a promotion event is ongoing
             promotion_tile = self.game.which_pawn_promotable()
@@ -273,9 +282,6 @@ class App:
                 else:
                     triggered_tile_name = ctx.triggered_id.get('index')
 
-                    # set the new tile state
-                    self.tiles = args[-2]
-
                     game_state = None
                     if selected_tile_name is not None:
                         self.game.move(
@@ -294,7 +300,7 @@ class App:
 
                     self.log(game_state, selected_tile_name)
 
-                    updated_tiles = self.update_tiles(selected_tile_name)
+                    updated_tiles = self.update_tiles(tiles, selected_tile_name, is_help_activated)
 
                     # check if a promotion event is triggered
                     promotion_tile = self.game.which_pawn_promotable()
@@ -317,7 +323,7 @@ class App:
                 )
                 print('promotion event finished')
 
-                return self.update_tiles(selected_tile_name), None, selected_tile_name
+                return self.update_tiles(tiles, selected_tile_name, is_help_activated), None, selected_tile_name
             else:
                 raise ValueError()
 
@@ -371,39 +377,43 @@ class App:
 
         @self.dash.callback(
             Output('help', 'className'),
+            Output('help_store', 'data'),
             Input('help', 'n_clicks'),
+            State('help_store', 'data'),
             prevent_initial_callback=True
         )
-        def toggle_help(_):
+        def toggle_help(_, is_help_activated):
             if ctx.triggered_id is None:
                 raise PreventUpdate
 
             # toggle help attr
-            if self.help:
-                self.help = False
-                return 'help menu-item'
+            if is_help_activated:
+                is_help_activated = False
+                return 'help menu-item', is_help_activated
 
-            self.help = True
-            return 'help menu-item on'
+            is_help_activated = True
+            return 'help menu-item on', is_help_activated
 
         @self.dash.callback(
             Output('timer', 'className'),
             Output('clocks', 'className'),
             Output('ticker', 'disabled'),
+            Output('timer_store', 'data'),
             Input('timer', 'n_clicks'),
+            State('timer_store', 'data'),
             prevent_initial_callback=True
         )
-        def toggle_timer(_):
+        def toggle_timer(_, is_timer_activated):
             if ctx.triggered_id is None:
                 raise PreventUpdate
 
             # toggle timer attr
-            if self.timer:
-                self.timer = False
-                return 'timer menu-item', 'clocks', True
+            if is_timer_activated:
+                is_timer_activated = False
+                return 'timer menu-item', 'clocks', True, is_timer_activated
 
-            self.timer = True
-            return 'timer menu-item on', 'clocks visible', False
+            is_timer_activated = True
+            return 'timer menu-item on', 'clocks visible', False, is_timer_activated
 
         @self.dash.callback(
             Output('white-clock', 'children'),
