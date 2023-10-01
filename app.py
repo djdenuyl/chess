@@ -10,7 +10,6 @@ from dash import Dash, Input, Output, ctx, State, ALL
 from dash.dcc import Interval, Store
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
-from dash_unload_component import Unload
 from dash_svg import Svg
 from flask import Flask
 from itertools import product
@@ -68,8 +67,7 @@ class App(Dash):
                 ]),
                 Div(id='promotion'),
                 Div(id='border', children=self.init_labels()),
-                Div(id='chessboard'),
-                Unload(id='unloader'),
+                Div(id='chessboard')
             ]
         )
 
@@ -471,18 +469,6 @@ class App(Dash):
 
             self.game(game_id).update_player_time(Color.BLACK)
             return white_time, time_int_to_str(self.game(game_id).black.time)
-
-        @self.callback(
-            Output('unloader', 'id'),
-            Input('unloader', 'close'),
-            State('game_id_store', 'data'),
-            prevent_initial_call=True
-        )
-        def remove_game_id_on_browser_refresh(_, game_id):
-            print(f'{game_id}: closing game')
-            self.games.pop(game_id)
-
-            return 'listener'
 
 
 if __name__ == '__main__':
