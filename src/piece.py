@@ -193,3 +193,7 @@ class PieceOption(Enum):
     KNIGHT = 'knight'
     ROOK = 'rook'
     PAWN = 'pawn'
+
+    @classmethod
+    def values(cls) -> list:
+        return [c.value for c in cls if c.value is not None]

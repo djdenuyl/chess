@@ -13,7 +13,6 @@ from lxml.etree import fromstring, _Element, QName
 from pathlib import Path as FilePath
 from re import search
 from typing import Optional
-from uuid import uuid4
 
 
 class SVGShape(Enum):
@@ -93,7 +92,6 @@ class SVGParser:
 
     def parse_circle(self, shape: _Element, with_color: bool = False) -> Circle:
         return Circle(
-            id={'type': 'shape', 'id': str(uuid4())},
             r=shape.attrib.get('r'),
             cx=shape.attrib.get('cx'),
             cy=shape.attrib.get('cy'),
@@ -106,7 +104,6 @@ class SVGParser:
 
     def parse_ellipse(self, shape: _Element, with_color: bool = False) -> Ellipse:
         return Ellipse(
-            id={'type': 'shape', 'id': str(uuid4())},
             rx=shape.attrib.get('rx'),
             ry=shape.attrib.get('ry'),
             cx=shape.attrib.get('cx'),
@@ -120,7 +117,6 @@ class SVGParser:
 
     def parse_line(self, shape: _Element, with_color: bool = False) -> Line:
         return Line(
-            id={'type': 'shape', 'id': str(uuid4())},
             x1=shape.attrib.get('x1'),
             y1=shape.attrib.get('y1'),
             x2=shape.attrib.get('x2'),
@@ -134,7 +130,6 @@ class SVGParser:
 
     def parse_path(self, shape: _Element, with_color: bool = False) -> Path:
         return Path(
-            id={'type': 'shape', 'id': str(uuid4())},
             d=shape.attrib.get('d'),
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
@@ -145,7 +140,6 @@ class SVGParser:
 
     def parse_polygon(self, shape: _Element, with_color: bool = False) -> Polygon:
         return Polygon(
-            id={'type': 'shape', 'id': str(uuid4())},
             points=shape.attrib.get('points'),
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
@@ -156,7 +150,6 @@ class SVGParser:
 
     def parse_polyline(self, shape: _Element, with_color: bool = False) -> Polyline:
         return Polyline(
-            id={'type': 'shape', 'id': str(uuid4())},
             points=shape.attrib.get('points'),
             transform=shape.attrib.get('transform'),
             stroke=self.stroke,
@@ -167,7 +160,6 @@ class SVGParser:
 
     def parse_rect(self, shape: _Element, with_color: bool = False) -> Rect:
         return Rect(
-            id={'type': 'shape', 'id': str(uuid4())},
             width=shape.attrib.get('width'),
             height=shape.attrib.get('height'),
             x=shape.attrib.get('x'),

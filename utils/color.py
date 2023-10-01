@@ -11,6 +11,11 @@ class Color(Enum):
     WHITE = 'white'
     NONE = None
 
+    @classmethod
+    def members(cls):
+        """ return the not None members """
+        return [c for c in Color if c.value is not None]
+
 
 def opponent(color: Color) -> Color:
     """ return the opposing color of the given color"""
