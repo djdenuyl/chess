@@ -5,7 +5,7 @@ author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
 from dash import Dash, Input, Output, ctx, State, ALL
-from dash.dcc import Interval
+from dash.dcc import Interval, Store
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from dash_svg import Svg
@@ -14,9 +14,8 @@ from itertools import product
 from parsers.svg import SVGParser
 from pathlib import Path
 from src.game import Game
-from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER, PieceOption
+from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER, PieceOption, PieceType
 from src.state import State as GameState
-from src.tile import Tile
 from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
@@ -31,7 +30,6 @@ class App:
         self.game: Game = Game()
         self.original_classes = []
         self.tiles = None
-        self.selected_tile_name = None
         self.help = False
         self.timer = False
         self.assets = self.load_assets()
@@ -49,6 +47,7 @@ class App:
         return Div(
             id='app-container',
             children=[
+                Store(id='selected_tile_store'),
                 Div(id='menu', children=self.init_menu_items()),
                 Div(id='indicator', children=Div(id='signal', className='signal')),
                 Div(id='clocks', className='clocks', children=self.init_clocks()),
@@ -94,7 +93,7 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=self.get_piece_asset(tile)
+                        children=self.get_piece_asset(tile.piece)
                     )
                 )
 
@@ -112,10 +111,22 @@ class App:
             children=[
                 # opponent here looks weird, but promotion is checked after the move has completed, which technically
                 # makes it the opponents turn
-                Button(id={'type': 'promotion', 'index': 'queen'}, children=str(Queen(opponent(self.game.turn)))),
-                Button(id={'type': 'promotion', 'index': 'bishop'}, children=str(Bishop(opponent(self.game.turn)))),
-                Button(id={'type': 'promotion', 'index': 'knight'}, children=str(Knight(opponent(self.game.turn)))),
-                Button(id={'type': 'promotion', 'index': 'rook'}, children=str(Rook(opponent(self.game.turn)))),
+                Button(
+                    id={'type': 'promotion', 'index': 'queen'},
+                    children=self.get_piece_asset(Queen(opponent(self.game.turn)))
+                ),
+                Button(
+                    id={'type': 'promotion', 'index': 'bishop'},
+                    children=self.get_piece_asset(Bishop(opponent(self.game.turn)))
+                ),
+                Button(
+                    id={'type': 'promotion', 'index': 'knight'},
+                    children=self.get_piece_asset(Knight(opponent(self.game.turn)))
+                ),
+                Button(
+                    id={'type': 'promotion', 'index': 'rook'},
+                    children=self.get_piece_asset(Rook(opponent(self.game.turn)))
+                ),
             ]
         )
 
@@ -166,26 +177,26 @@ class App:
     def update_placement(self):
         """ update the children of all tiles with the current game state"""
         for i, _ in enumerate(self.tiles):
-            self.tiles[i]['props']['children'] = self.get_piece_asset(self.game.board.tile_by_index(i))
+            self.tiles[i]['props']['children'] = self.get_piece_asset(self.game.board.tile_by_index(i).piece)
 
-    def update_tiles(self) -> list[dict]:
+    def update_tiles(self, selected_tile_name) -> list[dict]:
         """ update the tiles, update the placements and effects"""
         self.update_placement()
         self.reset_effects()
 
         # if there is a tile selected
-        if self.selected_tile_name is not None:
-            self.update_effects(self.selected_tile_name, add=['selected'])
+        if selected_tile_name is not None:
+            self.update_effects(selected_tile_name, add=['selected'])
             if self.help:
                 # id the valid moves
-                for t in self.game.valid_moves(self.game.board.tile_by_name(self.selected_tile_name)):
+                for t in self.game.valid_moves(self.game.board.tile_by_name(selected_tile_name)):
                     self.update_effects(t.name, add=['valid-move'])
 
                 threatened_tiles = [
-                    t.name for t in self.game.is_under_thread_by(self.game.board.tile_by_name(self.selected_tile_name))
+                    t.name for t in self.game.is_under_thread_by(self.game.board.tile_by_name(selected_tile_name))
                 ]
                 threatening_tiles = [
-                    t.name for t in self.game.is_threatening(self.game.board.tile_by_name(self.selected_tile_name))
+                    t.name for t in self.game.is_threatening(self.game.board.tile_by_name(selected_tile_name))
                 ]
 
                 for t in set(threatened_tiles + threatening_tiles):
@@ -198,46 +209,52 @@ class App:
 
         return self.tiles
 
-    def update_selection(self, triggered_tile_name):
+    def update_selection(self, triggered_tile_name: str, selected_tile_name: str | None) -> str:
         """ update the selection state depending on which index was triggered. """
         # if nothing was selected and the player clicked on a piece of its own color, select it
-        if self.selected_tile_name is None \
+        if selected_tile_name is None \
                 and self.game.board.tile_by_name(triggered_tile_name).piece.color == self.game.turn:
-            self.selected_tile_name = triggered_tile_name
+            selected_tile_name = triggered_tile_name
         # if the click was on the currently already selected tile, deselect it
-        elif triggered_tile_name == self.selected_tile_name:
-            self.selected_tile_name = None
-        elif triggered_tile_name != self.selected_tile_name and self.selected_tile_name is not None:
-            self.selected_tile_name = triggered_tile_name
+        elif triggered_tile_name == selected_tile_name:
+            selected_tile_name = None
+        elif triggered_tile_name != selected_tile_name and selected_tile_name is not None:
+            selected_tile_name = triggered_tile_name
         else:
             pass
 
-    def log(self, state: Optional[GameState]):
-        if self.selected_tile_name is not None:
+        return selected_tile_name
+
+    def log(self, state: Optional[GameState], selected_tile_name: str):
+        if selected_tile_name is not None:
             print(f"its {self.game.turn.name}'s turn, "
-                  f"{self.game.board.tile_by_name(self.selected_tile_name).piece.__class__.__name__} at "
-                  f"{self.selected_tile_name} is selected")
+                  f"{self.game.board.tile_by_name(selected_tile_name).piece.__class__.__name__} at "
+                  f"{selected_tile_name} is selected")
         else:
             print(f"its {self.game.turn.name}'s turn, nothing is selected")
 
         if state is not None:
             print(f'player {self.game.turn.name}: {state.name}')
 
-    def get_piece_asset(self, tile: Tile) -> Svg | None:
+    def get_piece_asset(self, piece: PieceType) -> Svg | None:
         """ loads the piece asset on <tile> and return as svg """
-        return self.assets.get(str(tile.piece))
+        return self.assets.get(str(piece))
 
     def callbacks(self):
         @self.dash.callback(
             Output('chessboard', 'children'),
             Output('promotion', 'children'),
+            Output('selected_tile_store', 'data'),
             Input({'type': 'tile', 'index': ALL}, 'n_clicks'),
             Input({'type': 'promotion', 'index': ALL}, 'n_clicks'),
             State('chessboard', 'children'),
+            State('selected_tile_store', 'data'),
             prevent_initial_callback=True
         )
         def render(*args):
             """ render a new frame of the game """
+            selected_tile_name = args[-1]
+
             # check if a promotion event is ongoing
             promotion_tile = self.game.which_pawn_promotable()
 
@@ -257,12 +274,12 @@ class App:
                     triggered_tile_name = ctx.triggered_id.get('index')
 
                     # set the new tile state
-                    self.tiles = args[-1]
+                    self.tiles = args[-2]
 
                     game_state = None
-                    if self.selected_tile_name is not None:
+                    if selected_tile_name is not None:
                         self.game.move(
-                            self.game.board.tile_by_name(self.selected_tile_name),
+                            self.game.board.tile_by_name(selected_tile_name),
                             self.game.board.tile_by_name(triggered_tile_name)
                         )
 
@@ -270,23 +287,24 @@ class App:
                         game_state = self.game.state()
 
                         # deselect after move attempt
-                        self.selected_tile_name = None
+                        selected_tile_name = None
                     else:
                         # update which piece is selected
-                        self.update_selection(triggered_tile_name)
+                        selected_tile_name = self.update_selection(triggered_tile_name, selected_tile_name)
 
-                    self.log(game_state)
+                    self.log(game_state, selected_tile_name)
 
-                    updated_tiles = self.update_tiles()
+                    updated_tiles = self.update_tiles(selected_tile_name)
 
                     # check if a promotion event is triggered
                     promotion_tile = self.game.which_pawn_promotable()
+
                     if promotion_tile is not None:
                         print('promotion event started')
-                        return updated_tiles, self.init_promotion_tile(promotion_tile)
+                        return updated_tiles, self.init_promotion_tile(promotion_tile), selected_tile_name
 
                     # if not, finish regular turn
-                    return updated_tiles, None
+                    return updated_tiles, None, selected_tile_name
 
             # if clicked on a promotion tile
             elif ctx.triggered_id.get('type') == 'promotion':
@@ -299,7 +317,7 @@ class App:
                 )
                 print('promotion event finished')
 
-                return self.update_tiles(), None
+                return self.update_tiles(selected_tile_name), None, selected_tile_name
             else:
                 raise ValueError()
 
@@ -314,7 +332,7 @@ class App:
             threshold = 1
 
             # preventing update if the ticker triggers this callback but the player is not out of time,
-            # so it doesnt calculate whether checkmate is reached every clock tick
+            # so it doesn't calculate whether checkmate is reached every clock tick
             if ctx.triggered_id == 'ticker' and not self.game.out_of_time(threshold):
                 raise PreventUpdate
 
