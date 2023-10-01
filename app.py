@@ -8,11 +8,15 @@ from dash import Dash, Input, Output, ctx, State, ALL
 from dash.dcc import Interval
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
+from dash_svg import Svg
 from flask import Flask
+from itertools import product
+from parsers.svg import SVGParser
 from pathlib import Path
 from src.game import Game
-from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER
+from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER, PieceOption
 from src.state import State as GameState
+from src.tile import Tile
 from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
@@ -30,16 +34,15 @@ class App:
         self.selected_tile_name = None
         self.help = False
         self.timer = False
+        self.assets = self.load_assets()
 
+        # last step in the constructor is to set up the dash app
+        self.setup()
+
+    def setup(self):
+        """ set up the dash app by adding the layout and the callbacks """
         self.dash.layout = self.layout
         self.callbacks()
-
-    def icon_path(self, *args: str) -> str:
-        base = Path(self.dash.get_asset_url('icons'))
-        for arg in args:
-            base /= arg
-
-        return base.as_posix()
 
     @property
     def layout(self) -> Div:
@@ -91,7 +94,7 @@ class App:
                             'index': tile.name
                         },
                         className=class_name,
-                        children=str(tile.piece)
+                        children=self.get_piece_asset(tile)
                     )
                 )
 
@@ -125,6 +128,28 @@ class App:
         btm_letters = Div(className='label btm letters ', children=[Div(i) for i in LETTERS])
         return [top_letters, lft_numbers, rgt_numbers, btm_letters]
 
+    @staticmethod
+    def load_assets() -> dict[str: Svg]:
+        """ load all the piece assets """
+        svgs = {}
+        for piece_type, color in product(PieceOption, Color.members()):
+            symbol = str(PIECE_TYPE_MAPPER.get(piece_type.value)(color))
+
+            svgs |= {
+                symbol: SVGParser
+                .from_file(
+                    file=Path('assets', 'pieces', color.value, f'{piece_type.value}.svg'),
+                    fill='#264653',
+                    stroke_width=0
+                )
+                .parse_svg(
+                    with_color=False,
+                    classes=['piece']
+                )
+            }
+
+        return svgs
+
     def reset_effects(self):
         """ reset the class for each tile to its original state"""
         # reset fx
@@ -141,7 +166,7 @@ class App:
     def update_placement(self):
         """ update the children of all tiles with the current game state"""
         for i, _ in enumerate(self.tiles):
-            self.tiles[i]['props']['children'] = str(self.game.board.tile_by_index(i).piece)
+            self.tiles[i]['props']['children'] = self.get_piece_asset(self.game.board.tile_by_index(i))
 
     def update_tiles(self) -> list[dict]:
         """ update the tiles, update the placements and effects"""
@@ -197,6 +222,10 @@ class App:
 
         if state is not None:
             print(f'player {self.game.turn.name}: {state.name}')
+
+    def get_piece_asset(self, tile: Tile) -> Svg | None:
+        """ loads the piece asset on <tile> and return as svg """
+        return self.assets.get(str(tile.piece))
 
     def callbacks(self):
         @self.dash.callback(
