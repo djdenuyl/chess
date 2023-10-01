@@ -6,6 +6,8 @@ TODO: bug - game does not correctly check if any piece can take the piece that i
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
+from random import randint
+
 from dash import Dash, Input, Output, ctx, State, ALL
 from dash.dcc import Interval, Store
 from dash.exceptions import PreventUpdate
@@ -26,9 +28,15 @@ from utils.letters import LETTERS
 from utils.time import time_int_to_str
 
 
-class App:
-    def __init__(self):
-        self.dash = Dash(server=Flask(__name__))
+class App(Dash):
+    def __init__(self, *args, **kwargs):
+        super() \
+            .__init__(
+            server=Flask(__name__),
+            *args,
+            **kwargs
+        )
+
         self.game: Game = Game()
         self.original_classes = []
         self.assets = self.load_assets()
@@ -38,14 +46,15 @@ class App:
 
     def setup(self):
         """ set up the dash app by adding the layout and the callbacks """
-        self.dash.layout = self.layout
+        self.layout = self.content
         self.callbacks()
 
     @property
-    def layout(self) -> Div:
+    def content(self) -> Div:
         return Div(
             id='app-container',
             children=[
+                Store(id='game_id_store'),
                 Store(id='selected_tile_store'),  # stores the currently selected tile
                 Store(id='help_store'),  # stores whether the help function is activated
                 Store(id='timer_store'),  # stores whether the timer is activated
@@ -58,10 +67,6 @@ class App:
                 Div(id='chessboard', children=self.init_board()),
             ]
         )
-
-    def play(self, **kwargs):
-        """ play the game """
-        self.dash.run(**kwargs)
 
     @staticmethod
     def init_menu_items() -> list[Button]:
@@ -233,23 +238,32 @@ class App:
 
         return selected_tile_name
 
-    def log(self, state: Optional[GameState], selected_tile_name: str):
+    def log(self, game_id: str, state: Optional[GameState], selected_tile_name: str):
         if selected_tile_name is not None:
-            print(f"its {self.game.turn.name}'s turn, "
+            print(f"{game_id}: its {self.game.turn.name}'s turn, "
                   f"{self.game.board.tile_by_name(selected_tile_name).piece.__class__.__name__} at "
                   f"{selected_tile_name} is selected")
         else:
-            print(f"its {self.game.turn.name}'s turn, nothing is selected")
+            print(f"{game_id}: its {self.game.turn.name}'s turn, nothing is selected")
 
         if state is not None:
-            print(f'player {self.game.turn.name}: {state.name}')
+            print(f'{game_id}: player {self.game.turn.name}: {state.name}')
 
     def get_piece_asset(self, piece: PieceType) -> Svg | None:
         """ loads the piece asset on <tile> and return as svg """
         return self.assets.get(str(piece))
 
     def callbacks(self):
-        @self.dash.callback(
+        @self.callback(
+            Output('game_id_store', 'data'),
+            Input('game_id_store', 'id')
+        )
+        def set_game_id(_):
+            _id = str(randint(1, 999_999_999)).zfill(9)
+            print(f'game_id: {_id}')
+            return _id
+
+        @self.callback(
             Output('chessboard', 'children'),
             Output('promotion', 'children'),
             Output('selected_tile_store', 'data'),
@@ -258,9 +272,10 @@ class App:
             State('chessboard', 'children'),
             State('selected_tile_store', 'data'),
             State('help_store', 'data'),
+            State('game_id_store', 'data'),
             prevent_initial_callback=True
         )
-        def render(tile_clicks, promotion_clicks, tiles, selected_tile_name, is_help_activated):
+        def render(tile_clicks, promotion_clicks, tiles, selected_tile_name, is_help_activated, game_id):
             """ render a new frame of the game """
             _ = tile_clicks, promotion_clicks  # unused
 
@@ -298,7 +313,7 @@ class App:
                         # update which piece is selected
                         selected_tile_name = self.update_selection(triggered_tile_name, selected_tile_name)
 
-                    self.log(game_state, selected_tile_name)
+                    self.log(game_id, game_state, selected_tile_name)
 
                     updated_tiles = self.update_tiles(tiles, selected_tile_name, is_help_activated)
 
@@ -327,7 +342,7 @@ class App:
             else:
                 raise ValueError()
 
-        @self.dash.callback(
+        @self.callback(
             Output('signal', 'className'),
             Input('chessboard', 'children'),
             Input('new', 'n_clicks'),
@@ -352,7 +367,7 @@ class App:
 
             return ' '.join(clss)
 
-        @self.dash.callback(
+        @self.callback(
             Output('app-container', 'children'),
             Input('new', 'n_clicks'),
             State('app-container', 'children'),
@@ -375,7 +390,7 @@ class App:
 
             return app_elements
 
-        @self.dash.callback(
+        @self.callback(
             Output('help', 'className'),
             Output('help_store', 'data'),
             Input('help', 'n_clicks'),
@@ -394,7 +409,7 @@ class App:
             is_help_activated = True
             return 'help menu-item on', is_help_activated
 
-        @self.dash.callback(
+        @self.callback(
             Output('timer', 'className'),
             Output('clocks', 'className'),
             Output('ticker', 'disabled'),
@@ -415,7 +430,7 @@ class App:
             is_timer_activated = True
             return 'timer menu-item on', 'clocks visible', False, is_timer_activated
 
-        @self.dash.callback(
+        @self.callback(
             Output('white-clock', 'children'),
             Output('black-clock', 'children'),
             Input('ticker', 'n_intervals'),
@@ -433,4 +448,4 @@ class App:
 
 if __name__ == '__main__':
     app = App()
-    app.play(debug=True)
+    app.run(debug=True)
