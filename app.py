@@ -67,7 +67,7 @@ class App(Dash):
                 ]),
                 Div(id='promotion'),
                 Div(id='border', children=self.init_labels()),
-                Div(id='chessboard')
+                Div(id='chessboard'),
             ]
         )
 
