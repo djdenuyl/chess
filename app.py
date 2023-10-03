@@ -20,6 +20,7 @@ from src.game import Game
 from src.piece import Queen, Rook, Knight, Bishop, PIECE_TYPE_MAPPER, PieceOption, PieceType
 from src.state import State as GameState
 from src.tile import Tile
+from stockfish import Stockfish
 from typing import Optional
 from ui.clock import Clock
 from ui.icons import NewIcon, HelpIcon, TimerIcon
@@ -38,6 +39,7 @@ class App(Dash):
         )
 
         self.games: dict[str: Game] = {}
+        self.stockfish = Stockfish()
         self.original_classes = []
         self.assets = self.load_assets()
 
@@ -56,6 +58,7 @@ class App(Dash):
             children=[
                 Store(id='game_id_store'),  # stores the id of the game
                 Store(id='new_game_event_store'),  # stores the event of starting a new game, use to update signal
+                Store(id='opponent_type_store', data='stockfish'),  # stores whether opponent is a human or an engine
                 Store(id='selected_tile_store'),  # stores the currently selected tile
                 Store(id='help_store'),  # stores whether the help function is activated
                 Store(id='timer_store'),  # stores whether the timer is activated
@@ -78,7 +81,16 @@ class App(Dash):
     def init_menu_items() -> list[Button]:
         """ create the menu items """
         return [
-            Button(id='new', className='new menu-item', children=NewIcon()),
+            Button(
+                id='new',
+                className='new menu-item',
+                children=[
+                    NewIcon(),
+                    # Button(id='local'),
+                    # Button(id='ai'),
+                    # Button(id='multiplayer')
+                ]
+            ),
             Button(id='help', className='help menu-item', children=HelpIcon()),
             Button(id='timer', className='timer menu-item', children=TimerIcon())
         ]
@@ -277,11 +289,12 @@ class App(Dash):
             State('selected_tile_store', 'data'),
             State('help_store', 'data'),
             State('game_id_store', 'data'),
+            State('opponent_type_store', 'data'),
             prevent_initial_callback=True
         )
-        def render(tile_clicks, promotion_clicks, tiles, selected_tile_name, is_help_activated, game_id):
+        def render(tile_clicks, promotion_clicks, tiles, selected_tile_name, is_help_activated, game_id, opponent_type):
             """ render a new frame of the game """
-            _ = tile_clicks, promotion_clicks  # unused
+            _ = tile_clicks, promotion_clicks  # ignored
 
             if ctx.triggered_id is None:
                 raise PreventUpdate
@@ -296,7 +309,7 @@ class App(Dash):
             elif ctx.triggered_id.get('type') == 'tile':
                 # defer clicks on tiles when a promotion event is ongoing
                 if promotion_tile is not None:
-                    print('promotion event ongoing')
+                    print(f'{game_id}: promotion event ongoing')
                     raise PreventUpdate
                 # regular turn
                 else:
@@ -304,10 +317,22 @@ class App(Dash):
 
                     game_state = None
                     if selected_tile_name is not None:
-                        self.game(game_id).move(
-                            self.game(game_id).board.tile_by_name(selected_tile_name),
-                            self.game(game_id).board.tile_by_name(triggered_tile_name)
-                        )
+                        frm_tile = self.game(game_id).board.tile_by_name(selected_tile_name)
+                        to_tile = self.game(game_id).board.tile_by_name(triggered_tile_name)
+
+                        is_move_successful = self.game(game_id).move(frm_tile, to_tile)
+
+                        if opponent_type == 'stockfish' and is_move_successful:
+                            print(f"{game_id}: it's stockfish's turn")
+
+                            player_move = f'{frm_tile.name.lower()}{to_tile.name.lower()}'
+                            self.stockfish.make_moves_from_current_position([player_move])
+                            stockfish_move = self.stockfish.get_best_move()
+                            print(f"{game_id}: stockfish moves: {stockfish_move}")
+                            sf_frm_tile = self.game(game_id).board.tile_by_name(stockfish_move[:2].upper())
+                            sf_to_tile = self.game(game_id).board.tile_by_name(stockfish_move[2:4].upper())
+                            self.game(game_id).move(sf_frm_tile, sf_to_tile)
+                            self.stockfish.make_moves_from_current_position([stockfish_move])
 
                         # check the game state after the move
                         game_state = self.game(game_id).state()
@@ -326,7 +351,7 @@ class App(Dash):
                     promotion_tile = self.game(game_id).which_pawn_promotable()
 
                     if promotion_tile is not None:
-                        print('promotion event started')
+                        print(f'{game_id}: promotion event started')
                         return updated_tiles, self.init_promotion_tile(game_id, promotion_tile), selected_tile_name
 
                     # if not, finish regular turn
@@ -387,8 +412,9 @@ class App(Dash):
             Input('game_id_store', 'data'),
             Input('new', 'n_clicks'),
             State('app-container', 'children'),
+            State('opponent_type_store', 'data'),
         )
-        def start(game_id, _, app_elements):
+        def start(game_id, _, app_elements, opponent_type):
             if ctx is None:
                 raise PreventUpdate
 
@@ -396,12 +422,14 @@ class App(Dash):
             _id = str(randint(1, 999_999_999)).zfill(9)
 
             if game_id is not None:
-                print(f'{game_id}: starting new game with id: {_id} (active games: {len(self.games)})')
+                print(
+                    f'{game_id}: starting new game with id: {_id} vs. {opponent_type} (active games: {len(self.games)})'
+                )
                 self.games.pop(game_id)
                 self.games |= {_id: Game()}
             else:
                 self.games |= {_id: Game()}
-                print(f'{_id}: starting new game (active games: {len(self.games)})')
+                print(f'{_id}: starting new game vs. {opponent_type} (active games: {len(self.games)})')
 
             # reset the board and the clock
             for component, initializer in [

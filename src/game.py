@@ -170,7 +170,7 @@ class Game:
         self.board.tiles[self.board.height - r_tile.y][rx].piece.has_moved = True
         self.board.tiles[self.board.height - to.y][to.x_int].piece = Blank()
 
-    def move(self, frm: Tile, to: Tile):
+    def move(self, frm: Tile, to: Tile) -> bool:
         """ move a piece"""
         # reset pawns of the player whose turn it is to not passable
         self.board.reset_passable_pawns(self.turn)
@@ -199,7 +199,7 @@ class Game:
             if self.check():
                 self.board.tiles[self.board.height - to.y][to.x_int].piece = to_piece
                 self.board.tiles[self.board.height - frm.y][frm.x_int].piece = frm_piece
-                return
+                return False
 
             # if the move is a valid en-passant move, remove the pawn that was passed
             if passable_pawn_tile is not None:
@@ -207,6 +207,10 @@ class Game:
 
             # set the turn to the other player
             self.turn = opponent(self.turn)
+
+            return True
+
+        return False
 
     def check(self) -> bool:
         """ checks for the player who's turn it is whether its king is in check"""

@@ -8,3 +8,4 @@ dependencies:
   - pip:
       - dash-svg
       - dash-extensions
+      - stockfish==3.28.0

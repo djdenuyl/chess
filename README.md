@@ -3,6 +3,11 @@ chesh in dash, yesh
 
 ## how to run
 
+* install stockfish. on linux:
+```
+sudo apt install stockfish
+```
+
 * install anaconda
 * install conda environment
 
