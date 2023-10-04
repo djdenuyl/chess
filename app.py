@@ -6,13 +6,15 @@ TODO: bug - game does not correctly check if any piece can take the piece that i
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
-from dash import Dash, Input, Output, ctx, State, ALL
+from dash import Dash, Input, Output, ctx, State, ALL, no_update
 from dash.dcc import Interval, Store
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
 from dash_svg import Svg
+from dotenv import load_dotenv
 from flask import Flask
 from itertools import product
+from os import environ
 from parsers.svg import SVGParser
 from pathlib import Path
 from random import randint
@@ -31,6 +33,7 @@ from utils.time import time_int_to_str
 
 class App(Dash):
     def __init__(self, *args, **kwargs):
+
         super() \
             .__init__(
             server=Flask(__name__),
@@ -39,7 +42,7 @@ class App(Dash):
         )
 
         self.games: dict[str: Game] = {}
-        self.stockfish = Stockfish()
+        self.stockfish = Stockfish(environ.get('STOCKFISH_PATH'))
         self.original_classes = []
         self.assets = self.load_assets()
 
@@ -59,6 +62,7 @@ class App(Dash):
                 Store(id='game_id_store'),  # stores the id of the game
                 Store(id='new_game_event_store'),  # stores the event of starting a new game, use to update signal
                 Store(id='opponent_type_store', data='stockfish'),  # stores whether opponent is a human or an engine
+                Store(id='opponent_turn_store'),  # stores whether it's the bots turn
                 Store(id='selected_tile_store'),  # stores the currently selected tile
                 Store(id='help_store'),  # stores whether the help function is activated
                 Store(id='timer_store'),  # stores whether the timer is activated
@@ -87,8 +91,8 @@ class App(Dash):
                 children=[
                     NewIcon(),
                     # Button(id='local'),
-                    # Button(id='ai'),
-                    # Button(id='multiplayer')
+                    # Button(id='bot'),
+                    # Button(id='remote')
                 ]
             ),
             Button(id='help', className='help menu-item', children=HelpIcon()),
@@ -211,7 +215,7 @@ class App(Dash):
         return tiles
 
     def update_tiles(
-            self, game_id: str, tiles: list[dict], selected_tile_name: str, is_help_activated: bool
+            self, game_id: str, tiles: list[dict], selected_tile_name: str | None, is_help_activated: bool
     ) -> list[dict]:
         """ update the tiles, update the placements and effects"""
         tiles = self.update_placement(game_id, tiles)
@@ -263,10 +267,10 @@ class App(Dash):
 
         return selected_tile_name
 
-    def log(self, game_id: str, state: Optional[GameState], selected_tile_name: str):
+    def log(self, game_id: str, state: GameState | None, selected_tile_name: str):
         if selected_tile_name is not None:
             print(f"{game_id}: its {self.game(game_id).turn.name}'s turn, "
-                  f"{self.game(game_id).board.tile_by_name(selected_tile_name).piece.__class__.__name__} at "
+                  f"{self.game(game_id).board.tile_by_name(selected_tile_name).piece.type} at "
                   f"{selected_tile_name} is selected")
         else:
             print(f"{game_id}: its {self.game(game_id).turn.name}'s turn, nothing is selected")
@@ -280,9 +284,34 @@ class App(Dash):
 
     def callbacks(self):
         @self.callback(
-            Output('chessboard', 'children'),
+            Output('chessboard', 'children', allow_duplicate=True),
+            Input('opponent_turn_store', 'data'),
+            State('chessboard', 'children'),
+            State('game_id_store', 'data'),
+            prevent_initial_call=True
+        )
+        def bot(a, tiles, game_id):
+            print(f"{game_id}: STOCKFISH")
+
+            self.stockfish.set_position([m.lower() for m in self.game(game_id).moves])
+            stockfish_move = self.stockfish.get_best_move()
+            frm_tile = self.game(game_id).board.tile_by_name(stockfish_move[:2].upper())
+            to_tile = self.game(game_id).board.tile_by_name(stockfish_move[2:4].upper())
+            self.game(game_id).move(frm_tile, to_tile)
+            print(
+                f'{game_id}: {opponent(self.game(game_id).turn).name} '
+                f'moves {to_tile.piece.type} '
+                f'from {frm_tile.name} '
+                f'to {to_tile.name}'
+            )
+            updated_tiles = self.update_tiles(game_id, tiles, None, False)
+            return updated_tiles
+
+        @self.callback(
+            Output('chessboard', 'children', allow_duplicate=True),
             Output('promotion', 'children'),
             Output('selected_tile_store', 'data'),
+            Output('opponent_turn_store', 'data'),
             Input({'type': 'tile', 'index': ALL}, 'n_clicks'),
             Input({'type': 'promotion', 'index': ALL}, 'n_clicks'),
             State('chessboard', 'children'),
@@ -290,9 +319,17 @@ class App(Dash):
             State('help_store', 'data'),
             State('game_id_store', 'data'),
             State('opponent_type_store', 'data'),
-            prevent_initial_callback=True
+            prevent_initial_call=True
         )
-        def render(tile_clicks, promotion_clicks, tiles, selected_tile_name, is_help_activated, game_id, opponent_type):
+        def render(
+                tile_clicks,
+                promotion_clicks,
+                tiles,
+                selected_tile_name,
+                is_help_activated,
+                game_id,
+                opponent_type,
+        ):
             """ render a new frame of the game """
             _ = tile_clicks, promotion_clicks  # ignored
 
@@ -302,60 +339,78 @@ class App(Dash):
             # check if a promotion event is ongoing
             promotion_tile = self.game(game_id).which_pawn_promotable()
 
+            # check if it isn't stalemate or a player has run out of time
             if self.game(game_id).state() == GameState.CHECKMATE \
                     or self.game(game_id).state() == GameState.OUT_OF_TIME:
                 raise PreventUpdate
+
             # if clicked on a tile
-            elif ctx.triggered_id.get('type') == 'tile':
+            if ctx.triggered_id.get('type') == 'tile':
                 # defer clicks on tiles when a promotion event is ongoing
                 if promotion_tile is not None:
                     print(f'{game_id}: promotion event ongoing')
                     raise PreventUpdate
+
                 # regular turn
                 else:
+                    # get the name of the tile that triggered the callback
                     triggered_tile_name = ctx.triggered_id.get('index')
 
                     game_state = None
+                    # if there was already a tile selected then the player is trying to make a move
+                    # or trying to deselect the tile
                     if selected_tile_name is not None:
                         frm_tile = self.game(game_id).board.tile_by_name(selected_tile_name)
                         to_tile = self.game(game_id).board.tile_by_name(triggered_tile_name)
 
                         is_move_successful = self.game(game_id).move(frm_tile, to_tile)
 
-                        if opponent_type == 'stockfish' and is_move_successful:
-                            print(f"{game_id}: it's stockfish's turn")
-
-                            player_move = f'{frm_tile.name.lower()}{to_tile.name.lower()}'
-                            self.stockfish.make_moves_from_current_position([player_move])
-                            stockfish_move = self.stockfish.get_best_move()
-                            print(f"{game_id}: stockfish moves: {stockfish_move}")
-                            sf_frm_tile = self.game(game_id).board.tile_by_name(stockfish_move[:2].upper())
-                            sf_to_tile = self.game(game_id).board.tile_by_name(stockfish_move[2:4].upper())
-                            self.game(game_id).move(sf_frm_tile, sf_to_tile)
-                            self.stockfish.make_moves_from_current_position([stockfish_move])
+                        if is_move_successful:
+                            print(
+                                f'{game_id}: {opponent(self.game(game_id).turn).name} '
+                                f'moves {to_tile.piece.type} '
+                                f'from {frm_tile.name} '
+                                f'to {to_tile.name}'
+                            )
 
                         # check the game state after the move
                         game_state = self.game(game_id).state()
 
                         # deselect after move attempt
                         selected_tile_name = None
+
+                        # if playing against a bot, pass the turn to the bot
+                        pass_to = 'bot' if opponent_type == 'stockfish' else no_update
+
+                    # if there was no tile selected yet, the player is trying to select a tile
                     else:
                         # update which piece is selected
                         selected_tile_name = self.update_selection(game_id, triggered_tile_name, selected_tile_name)
 
+                        # we don't pass the turn
+                        pass_to = no_update
+
+                    # log the current state of the game
                     self.log(game_id, game_state, selected_tile_name)
 
+                    # update the game tiles according to event that just occurred
                     updated_tiles = self.update_tiles(game_id, tiles, selected_tile_name, is_help_activated)
 
                     # check if a promotion event is triggered
                     promotion_tile = self.game(game_id).which_pawn_promotable()
 
+                    # if a promotion event has triggered, start the handling of the promotion event
                     if promotion_tile is not None:
                         print(f'{game_id}: promotion event started')
-                        return updated_tiles, self.init_promotion_tile(game_id, promotion_tile), selected_tile_name
+                        return (
+                            updated_tiles,
+                            self.init_promotion_tile(game_id, promotion_tile),
+                            selected_tile_name,
+                            pass_to
+                        )
 
                     # if not, finish regular turn
-                    return updated_tiles, None, selected_tile_name
+                    return updated_tiles, None, selected_tile_name, pass_to
 
             # if clicked on a promotion tile
             elif ctx.triggered_id.get('type') == 'promotion':
@@ -368,13 +423,19 @@ class App(Dash):
                 )
                 print('promotion event finished')
 
+                # if playing against a bot, pass the turn to the bot
+                pass_to = 'bot' if opponent_type == 'stockfish' else no_update
+
+                # update the tiles
                 return (
                     self.update_tiles(game_id, tiles, selected_tile_name, is_help_activated),
                     None,
-                    selected_tile_name
+                    selected_tile_name,
+                    pass_to
                 )
+            # only expecting tile or promotion clicks
             else:
-                raise ValueError()
+                raise ValueError
 
         @self.callback(
             Output('signal', 'className'),
@@ -500,5 +561,8 @@ class App(Dash):
 
 
 if __name__ == '__main__':
+    # load the env variables
+    load_dotenv('.env')
+
     app = App()
     app.run(debug=True)

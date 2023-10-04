@@ -29,9 +29,18 @@ class Piece(ABC):
     def symbol(self) -> dict[Color, str]:
         """ a property containing the symbology for the piece. used to return the str repr for the piece"""
 
+    @property
+    @abstractmethod
+    def fen(self) -> dict[Color, str]:
+        """ a property containing the FEN symbology for the piece. """
+
     @abstractmethod
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         """ this method implements whether movement of Tile frm to Tile to is allowed for the piece"""
+
+    @property
+    def type(self) -> str:
+        return self.__class__.__name__
 
 
 class Pawn(Piece):
@@ -42,6 +51,10 @@ class Pawn(Piece):
     @property
     def symbol(self):
         return {Color.BLACK: '♟', Color.WHITE: '♙'}
+
+    @property
+    def fen(self):
+        return {Color.BLACK: 'p', Color.WHITE: 'P'}.get(self.color)
 
     def is_valid_diagonal_move(self, direction: Direction, length: Length) -> bool:
         if abs(length.dx) == 1 and abs(length.dy) == 1:
@@ -84,6 +97,10 @@ class Rook(Piece):
     def symbol(self):
         return {Color.BLACK: '♜', Color.WHITE: '♖'}
 
+    @property
+    def fen(self):
+        return {Color.BLACK: 'r', Color.WHITE: 'R'}.get(self.color)
+
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, _ = get_vector(frm, to)
 
@@ -98,6 +115,10 @@ class Knight(Piece):
     @property
     def symbol(self):
         return {Color.BLACK: '♞', Color.WHITE: '♘'}
+
+    @property
+    def fen(self):
+        return {Color.BLACK: 'n', Color.WHITE: 'N'}.get(self.color)
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
@@ -115,6 +136,10 @@ class Bishop(Piece):
     def symbol(self):
         return {Color.BLACK: '♝', Color.WHITE: '♗'}
 
+    @property
+    def fen(self):
+        return {Color.BLACK: 'b', Color.WHITE: 'B'}.get(self.color)
+
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
@@ -131,6 +156,10 @@ class Queen(Piece):
     def symbol(self):
         return {Color.BLACK: '♛', Color.WHITE: '♕'}
 
+    @property
+    def fen(self):
+        return {Color.BLACK: 'q', Color.WHITE: 'Q'}.get(self.color)
+
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
 
@@ -146,6 +175,10 @@ class King(Piece):
     @property
     def symbol(self):
         return {Color.BLACK: '♚', Color.WHITE: '♔'}
+
+    @property
+    def fen(self):
+        return {Color.BLACK: 'k', Color.WHITE: 'K'}.get(self.color)
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         direction, length = get_vector(frm, to)
@@ -169,6 +202,10 @@ class Blank(Piece):
     @property
     def symbol(self):
         return {Color.NONE: ''}
+
+    @property
+    def fen(self):
+        return {Color.NONE: 1}.get(self.color)
 
     def is_valid_move(self, frm: 'Tile', to: 'Tile') -> bool:  # noqa
         """ never move a blank field"""

@@ -4,4 +4,5 @@ dash-svg==0.0.12
 flask==2.2.2
 gunicorn==20.1.0
 lxml==4.9.3
+python-dotenv==1.0.0
 stockfish==3.28.0

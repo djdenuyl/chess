@@ -26,6 +26,15 @@ class Game:
         self.players = {Color.WHITE: self.white, Color.BLACK: self.black}
         self.turn = Color.WHITE
         self._init_pieces()
+        self.moves = []
+
+    @property
+    def fen(self) -> NotImplementedError:
+        # TODO: finish this
+        for rank in self.board.tiles:
+            _ = [tile.piece.fen for tile in rank]
+
+        return NotImplementedError()
 
     def _init_pieces(self):
         for player in self.players.values():
@@ -208,6 +217,8 @@ class Game:
             # set the turn to the other player
             self.turn = opponent(self.turn)
 
+            # store the move
+            self.moves += [f'{frm.name}{to.name}']
             return True
 
         return False
