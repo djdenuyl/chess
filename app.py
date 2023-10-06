@@ -6,7 +6,7 @@ TODO: bug - game does not correctly check if any piece can take the piece that i
 author: David den Uyl (djdenuyl@gmail.com)
 date: 2022-10-22
 """
-from dash import Dash, Input, Output, ctx, State, ALL, no_update
+from dash import Dash, Input, Output, ctx, State, ALL
 from dash.dcc import Interval, Store
 from dash.exceptions import PreventUpdate
 from dash.html import Div, Button
@@ -42,7 +42,7 @@ class App(Dash):
         )
 
         self.games: dict[str: Game] = {}
-        self.stockfish = Stockfish(environ.get('STOCKFISH_PATH'))
+        self.bot = Stockfish(environ.get('STOCKFISH_PATH'))
         self.original_classes = []
         self.assets = self.load_assets()
 
@@ -61,7 +61,7 @@ class App(Dash):
             children=[
                 Store(id='game_id_store'),  # stores the id of the game
                 Store(id='new_game_event_store'),  # stores the event of starting a new game, use to update signal
-                Store(id='opponent_type_store', data='stockfish'),  # stores whether opponent is a human or an engine
+                Store(id='opponent_type_store', data='bot'),  # stores whether opponent is a human or an engine
                 Store(id='opponent_turn_store'),  # stores whether it's the bots turn
                 Store(id='selected_tile_store'),  # stores the currently selected tile
                 Store(id='help_store'),  # stores whether the help function is activated
@@ -268,6 +268,7 @@ class App(Dash):
         return selected_tile_name
 
     def log(self, game_id: str, state: GameState | None, selected_tile_name: str):
+        """ print whose turn it is and what the game state is to the terminal """
         if selected_tile_name is not None:
             print(f"{game_id}: its {self.game(game_id).turn.name}'s turn, "
                   f"{self.game(game_id).board.tile_by_name(selected_tile_name).piece.type} at "
@@ -290,21 +291,34 @@ class App(Dash):
             State('game_id_store', 'data'),
             prevent_initial_call=True
         )
-        def bot(a, tiles, game_id):
-            print(f"{game_id}: STOCKFISH")
+        def bot(whose_turn_is_it, tiles, game_id):
+            """ make a bot move """
+            if whose_turn_is_it != 'bot':
+                raise PreventUpdate
 
-            self.stockfish.set_position([m.lower() for m in self.game(game_id).moves])
-            stockfish_move = self.stockfish.get_best_move()
-            frm_tile = self.game(game_id).board.tile_by_name(stockfish_move[:2].upper())
-            to_tile = self.game(game_id).board.tile_by_name(stockfish_move[2:4].upper())
+            # set the bot according to the played positions.
+            self.bot.set_position([m.lower() for m in self.game(game_id).moves])
+
+            # get the best move from the bot
+            move = self.bot.get_best_move()
+
+            # convert the move into tiles
+            frm_tile = self.game(game_id).board.tile_by_name(move[:2].upper())
+            to_tile = self.game(game_id).board.tile_by_name(move[2:4].upper())
+
+            # move the bot piece
             self.game(game_id).move(frm_tile, to_tile)
+
             print(
-                f'{game_id}: {opponent(self.game(game_id).turn).name} '
+                f'{game_id}: {opponent(self.game(game_id).turn).name} (BOT)'
                 f'moves {to_tile.piece.type} '
                 f'from {frm_tile.name} '
                 f'to {to_tile.name}'
             )
+
+            # update the tiles
             updated_tiles = self.update_tiles(game_id, tiles, None, False)
+
             return updated_tiles
 
         @self.callback(
@@ -380,7 +394,7 @@ class App(Dash):
                         selected_tile_name = None
 
                         # if playing against a bot, pass the turn to the bot
-                        pass_to = 'bot' if opponent_type == 'stockfish' else no_update
+                        pass_to = 'bot' if opponent_type == 'bot' and is_move_successful else 'human'
 
                     # if there was no tile selected yet, the player is trying to select a tile
                     else:
@@ -388,7 +402,7 @@ class App(Dash):
                         selected_tile_name = self.update_selection(game_id, triggered_tile_name, selected_tile_name)
 
                         # we don't pass the turn
-                        pass_to = no_update
+                        pass_to = 'human'
 
                     # log the current state of the game
                     self.log(game_id, game_state, selected_tile_name)
@@ -424,7 +438,7 @@ class App(Dash):
                 print('promotion event finished')
 
                 # if playing against a bot, pass the turn to the bot
-                pass_to = 'bot' if opponent_type == 'stockfish' else no_update
+                pass_to = 'bot' if opponent_type == 'bot' else 'human'
 
                 # update the tiles
                 return (
@@ -490,7 +504,7 @@ class App(Dash):
                 self.games |= {_id: Game()}
             else:
                 self.games |= {_id: Game()}
-                print(f'{_id}: starting new game vs. {opponent_type} (active games: {len(self.games)})')
+                print(f'{_id}: starting new game human vs. {opponent_type} (active games: {len(self.games)})')
 
             # reset the board and the clock
             for component, initializer in [
